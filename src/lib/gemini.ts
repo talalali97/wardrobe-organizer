@@ -42,17 +42,21 @@ const RESPONSE_SCHEMA = {
     'context_tags', 'fit', 'confidence', 'notes']
 };
 
-export async function classifyImage(base64: string, mimeType: string): Promise<Classification> {
+export async function classifyImage(base64: string, mimeType: string, hint?: string): Promise<Classification> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('Missing GEMINI_API_KEY');
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
+  const promptText = hint?.trim()
+    ? `${PROMPT}\n\nUser note about this item: "${hint.trim()}"`
+    : PROMPT;
+
   const body = {
     contents: [{
       parts: [
-        { text: PROMPT },
+        { text: promptText },
         { inline_data: { mime_type: mimeType, data: base64 } }
       ]
     }],

@@ -24,7 +24,7 @@ export async function GET() {
 // Steps: classify -> upload to storage -> insert row
 export async function POST(req: NextRequest) {
   try {
-    const { imageBase64, mimeType } = await req.json();
+    const { imageBase64, mimeType, hint } = await req.json();
     if (!imageBase64 || !mimeType) {
       return NextResponse.json({ error: 'Missing imageBase64 or mimeType' }, { status: 400 });
     }
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     let classification: Classification;
     let classifyFailed = false;
     try {
-      classification = await classifyImage(imageBase64, mimeType);
+      classification = await classifyImage(imageBase64, mimeType, hint || undefined);
     } catch (e: any) {
       console.error('Classification failed:', e.message);
       classification = emptyClassification();

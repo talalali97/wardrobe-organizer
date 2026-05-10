@@ -24,6 +24,8 @@ export default function HomePage() {
   const [editing, setEditing] = useState<Item | null>(null);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState<string>('all');
+  const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
+  const [hint, setHint] = useState('');
 
   // Load items
   useEffect(() => {
@@ -84,8 +86,8 @@ export default function HomePage() {
     window.location.href = '/unlock';
   };
 
-  const processFiles = useCallback(async (files: FileList) => {
-    const arr = Array.from(files).filter((f) => f.type.startsWith('image/'));
+  const processFiles = useCallback(async (files: File[], userHint?: string) => {
+    const arr = files.filter((f) => f.type.startsWith('image/'));
     if (arr.length === 0) return;
 
     const queued: QueueItem[] = arr.map((f) => ({
@@ -128,6 +130,7 @@ export default function HomePage() {
           body: JSON.stringify({
             imageBase64: resized.base64,
             mimeType: resized.mimeType,
+            hint: userHint || undefined,
           }),
         });
         if (!res.ok) {
@@ -235,7 +238,46 @@ export default function HomePage() {
         )}
 
         {/* Drop zone */}
-        <DropZone onFiles={processFiles} />
+        <DropZone onFiles={(files) => setPendingFiles(Array.from(files).filter(f => f.type.startsWith('image/')))} />
+
+        {/* Hint input — shown after file selection, before processing */}
+        {pendingFiles && pendingFiles.length > 0 && (
+          <div className="mt-2 flex flex-col gap-2">
+            <input
+              type="text"
+              placeholder={`Describe the item (optional) — helps AI classify better, e.g. "linen shirt, beige"`}
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  processFiles(pendingFiles, hint);
+                  setPendingFiles(null);
+                  setHint('');
+                }
+              }}
+              className="w-full bg-zinc-900 border border-zinc-700 text-zinc-50 px-3 py-2 text-[12px] rounded-sm font-mono placeholder:text-zinc-600"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setPendingFiles(null); setHint(''); }}
+                className="bg-zinc-900 border border-zinc-800 text-zinc-500 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  processFiles(pendingFiles, hint);
+                  setPendingFiles(null);
+                  setHint('');
+                }}
+                className="flex-1 bg-accent text-zinc-950 px-3 py-2 text-[11px] font-bold tracking-wider uppercase rounded-sm"
+              >
+                Classify {pendingFiles.length} item{pendingFiles.length > 1 ? 's' : ''}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Queue */}
         {activeQueue.length > 0 && (
