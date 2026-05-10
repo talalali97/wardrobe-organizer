@@ -18,6 +18,18 @@ interface QueueItem {
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+const COLOR_CSS: Record<string, string> = {
+  'Black': '#09090b', 'White': '#fafafa', 'Off-white': '#f5f0e8', 'Cream': '#fffbeb',
+  'Grey': '#71717a', 'Light Grey': '#a1a1aa', 'Dark Grey': '#3f3f46', 'Charcoal': '#27272a',
+  'Beige': '#d4b896', 'Camel': '#c19a6b', 'Brown': '#92400e', 'Dark Brown': '#431407',
+  'Navy': '#1e3a5f', 'Navy Blue': '#1e3a5f', 'Dark Blue': '#1e3a8a', 'Blue': '#3b82f6',
+  'Light Blue': '#93c5fd', 'Sky Blue': '#7dd3fc',
+  'Olive': '#6b7c3a', 'Olive Green': '#6b7c3a', 'Green': '#22c55e', 'Dark Green': '#15803d', 'Khaki': '#c3b091',
+  'Maroon': '#7f1d1d', 'Burgundy': '#9f1239', 'Red': '#ef4444',
+  'Orange': '#f97316', 'Yellow': '#eab308', 'Pink': '#ec4899', 'Purple': '#a855f7', 'Teal': '#0d9488',
+};
+const colorToCss = (name: string) => COLOR_CSS[name] ?? '#52525b';
+
 export default function HomePage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,6 +212,21 @@ export default function HomePage() {
     return acc;
   }, {} as Record<string, number>);
 
+  const topColors = Object.entries(
+    items.reduce((acc, i) => { if (i.color_primary) acc[i.color_primary] = (acc[i.color_primary] || 0) + 1; return acc; }, {} as Record<string, number>)
+  ).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const formalityCounts = [1, 2, 3, 4, 5].map(f => items.filter(i => (i.formality || 3) === f).length);
+  const maxFormality = Math.max(...formalityCounts, 1);
+
+  const missingCats = CATEGORIES.filter(c => stats[c] === 0);
+  const topContext = Object.entries(
+    items.reduce((acc, i) => { (i.context_tags || []).forEach(t => { acc[t] = (acc[t] || 0) + 1; }); return acc; }, {} as Record<string, number>)
+  ).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const insight = missingCats.length > 0
+    ? `No ${missingCats.slice(0, 2).join(' · ')}`
+    : topContext ? `${topContext}-heavy` : '';
+
   const activeQueue = queue.filter((q) => q.status !== 'done');
 
   return (
@@ -250,6 +277,35 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
+        {/* Analytics */}
+        {items.length >= 5 && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-sm px-3 py-2.5 mb-4 flex flex-wrap gap-x-5 gap-y-2 items-center">
+            <div className="flex gap-2.5 flex-wrap items-center">
+              {topColors.map(([color, count]) => (
+                <div key={color} className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full border border-white/10 shrink-0" style={{ background: colorToCss(color) }} />
+                  <span className="text-[11px] font-mono text-zinc-400">{color} <span className="text-zinc-600">{count}</span></span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[10px] text-zinc-600 font-mono">gym</span>
+              <div className="flex gap-0.5 items-end h-5">
+                {formalityCounts.map((cnt, i) => (
+                  <div
+                    key={i}
+                    title={['Gym', 'Casual', 'Smart casual', 'Business', 'Formal'][i] + ': ' + cnt}
+                    style={{ height: `${Math.max((cnt / maxFormality) * 20, cnt > 0 ? 3 : 1)}px` }}
+                    className={`w-3.5 rounded-sm ${cnt > 0 ? 'bg-accent/60' : 'bg-zinc-800'}`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] text-zinc-600 font-mono">formal</span>
+            </div>
+            {insight && <span className="text-[11px] text-zinc-500 font-mono">{insight}</span>}
+          </div>
+        )}
 
         {/* Drop zone */}
         <DropZone onFiles={(files) => setPendingFiles(Array.from(files).filter(f => f.type.startsWith('image/')))} />
