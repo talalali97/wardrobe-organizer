@@ -7,6 +7,7 @@ import { resizeToBase64, itemsToCsv } from '@/lib/image';
 import { DropZone } from '@/components/DropZone';
 import { ItemCard } from '@/components/ItemCard';
 import { ItemEditor } from '@/components/ItemEditor';
+import { ChatPanel } from '@/components/ChatPanel';
 
 interface QueueItem {
   id: string;
@@ -490,6 +491,8 @@ export default function HomePage() {
           onSave={updateItem}
         />
       )}
+
+      <ChatPanel />
     </div>
   );
 }
