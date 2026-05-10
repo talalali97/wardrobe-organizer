@@ -9,7 +9,14 @@ Climate context: User is in Karachi, Pakistan — very hot summers (35-45C), mil
 Classify the visible clothing item with these guidelines:
 - suggested_name: short descriptive name e.g. "Black graphic tee", "Olive cargo pants", "Brown leather sneakers"
 - category: bucket the item into one high-level type
-- subcategory: specific type (T-shirt, Polo, Button-up, Hoodie, Jeans, Chinos, Shorts, Sneakers, Loafers, etc.)
+- subcategory: pick the closest match from these lists (do NOT invent new values):
+  Top → T-shirt, Polo, Shirt, Henley, Hoodie, Sweatshirt, Tank Top, Kameez, Kurta, Sweater
+  Bottom → Jeans, Chinos, Trousers, Shorts, Wide-leg Trousers, Track Pants, Joggers, Cargo Pants, Sweatpants, Shalwar
+  Outerwear → Jacket, Blazer, Coat, Windbreaker, Hoodie, Gilet
+  Shoes → Sneakers, Loafers, Dress Shoes, Sandals, Boots, Slides, Chappals
+  Accessory → Watch, Belt, Cap, Sunglasses, Bag, Wallet, Scarf, Bracelet
+  Underlayer → Undershirt, Boxers, Socks, Tank Top
+  NOTE: Joggers = tapered leg + drawstring waist. Wide-leg or baggy drawstring pants = Wide-leg Trousers or Track Pants.
 - formality: 1=gym/loungewear, 2=casual, 3=smart casual, 4=business, 5=formal
 - weight: visual fabric thickness — Light for thin breathable, Medium for standard, Heavy for coats/winter wear
 - sleeve_length: use "N/A" for shoes, accessories, and bottoms

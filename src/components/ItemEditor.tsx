@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
-  CATEGORIES, PATTERNS, MATERIALS, WEIGHTS, FITS, SLEEVES,
+  CATEGORIES, SUBCATEGORIES, PATTERNS, MATERIALS, WEIGHTS, FITS, SLEEVES,
   STATUSES, SEASONS, CONTEXTS, type Item, type Season, type Context
 } from '@/lib/types';
 import { Chip } from './Chip';
@@ -124,11 +124,16 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
                 </select>
               </Field>
               <Field label="Subcategory">
-                <input
+                <select
                   className={inputClass}
                   value={draft.subcategory || ''}
                   onChange={(e) => update('subcategory', e.target.value)}
-                />
+                >
+                  <option value="">— select —</option>
+                  {(SUBCATEGORIES[draft.category] ?? []).map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
               </Field>
             </div>
 
