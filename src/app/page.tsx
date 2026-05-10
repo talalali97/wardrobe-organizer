@@ -26,6 +26,7 @@ export default function HomePage() {
   const [filterCat, setFilterCat] = useState<string>('all');
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
   const [hint, setHint] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
   // Load items
   useEffect(() => {
@@ -160,19 +161,29 @@ export default function HomePage() {
     }, 2000);
   }, []);
 
-  const filtered = items.filter((i) => {
-    if (filterCat !== 'all' && i.category !== filterCat) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      if (
-        !i.name.toLowerCase().includes(q) &&
-        !(i.color_primary || '').toLowerCase().includes(q) &&
-        !(i.subcategory || '').toLowerCase().includes(q)
-      )
-        return false;
-    }
-    return true;
-  });
+  const filtered = items
+    .filter((i) => {
+      if (filterCat !== 'all' && i.category !== filterCat) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !i.name.toLowerCase().includes(q) &&
+          !(i.color_primary || '').toLowerCase().includes(q) &&
+          !(i.subcategory || '').toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'name':      return a.name.localeCompare(b.name);
+        case 'formality-asc': return (a.formality || 3) - (b.formality || 3);
+        case 'formality-desc': return (b.formality || 3) - (a.formality || 3);
+        default:          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
 
   const stats = CATEGORIES.reduce((acc, c) => {
     acc[c] = items.filter((i) => i.category === c).length;
@@ -333,10 +344,19 @@ export default function HomePage() {
             >
               <option value="all">all categories</option>
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-zinc-900 border border-zinc-800 text-zinc-50 px-2.5 py-2 text-[12px] rounded-sm font-mono"
+            >
+              <option value="newest">newest first</option>
+              <option value="oldest">oldest first</option>
+              <option value="name">name A–Z</option>
+              <option value="formality-asc">casual → formal</option>
+              <option value="formality-desc">formal → casual</option>
             </select>
           </div>
         )}
