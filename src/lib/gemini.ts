@@ -32,7 +32,7 @@ const RESPONSE_SCHEMA = {
     formality: { type: 'INTEGER' },
     sleeve_length: { type: 'STRING', enum: ['Sleeveless', 'Short', '3/4', 'Long', 'N/A'] },
     season_tags: { type: 'ARRAY', items: { type: 'STRING', enum: ['Summer', 'Winter', 'Monsoon', 'All-year'] } },
-    context_tags: { type: 'ARRAY', items: { type: 'STRING', enum: ['Gym', 'Office', 'Casual', 'Going-out', 'Home'] } },
+    context_tags: { type: 'ARRAY', items: { type: 'STRING', enum: ['Gym', 'Office', 'Casual', 'Going-out', 'Home', 'Street'] } },
     fit: { type: 'STRING', enum: ['Slim', 'Regular', 'Relaxed', 'Oversized', 'Unknown'] },
     confidence: { type: 'NUMBER' },
     notes: { type: 'STRING' }

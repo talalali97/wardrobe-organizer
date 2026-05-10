@@ -6,7 +6,7 @@ export const FITS = ['Slim', 'Regular', 'Relaxed', 'Oversized', 'Unknown'] as co
 export const SLEEVES = ['Sleeveless', 'Short', '3/4', 'Long', 'N/A'] as const;
 export const STATUSES = ['Clean', 'Dirty', 'At-cleaners', 'Storage', 'Retired'] as const;
 export const SEASONS = ['Summer', 'Winter', 'Monsoon', 'All-year'] as const;
-export const CONTEXTS = ['Gym', 'Office', 'Casual', 'Going-out', 'Home'] as const;
+export const CONTEXTS = ['Gym', 'Office', 'Casual', 'Going-out', 'Home', 'Street'] as const;
 
 export type Category = typeof CATEGORIES[number];
 export type Pattern = typeof PATTERNS[number];
