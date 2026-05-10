@@ -67,7 +67,7 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-zinc-900 border border-zinc-800 rounded-sm w-full max-w-2xl max-h-[92vh] overflow-auto overscroll-contain"
+        className="bg-zinc-900 border border-zinc-800 rounded-sm w-full max-w-2xl max-h-[92svh] overflow-auto overscroll-contain"
       >
         <div className="px-4 py-3.5 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
           <div className="text-[11px] tracking-[1.2px] uppercase text-accent">
