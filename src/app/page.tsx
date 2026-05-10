@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Download, RotateCcw, Search, Loader2 } from 'lucide-react';
-import { CATEGORIES, type Item } from '@/lib/types';
+import { CATEGORIES, SEASONS, CONTEXTS, type Item } from '@/lib/types';
 import { resizeToBase64, itemsToCsv } from '@/lib/image';
 import { DropZone } from '@/components/DropZone';
 import { ItemCard } from '@/components/ItemCard';
@@ -27,6 +27,10 @@ export default function HomePage() {
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
   const [hint, setHint] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [filterContexts, setFilterContexts] = useState<string[]>([]);
+  const [filterSeasons, setFilterSeasons] = useState<string[]>([]);
+
+
 
   // Load items
   useEffect(() => {
@@ -161,9 +165,14 @@ export default function HomePage() {
     }, 2000);
   }, []);
 
+  const toggleChip = (val: string, list: string[], set: (v: string[]) => void) =>
+    set(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
+
   const filtered = items
     .filter((i) => {
       if (filterCat !== 'all' && i.category !== filterCat) return false;
+      if (filterContexts.length > 0 && !filterContexts.some((c) => (i.context_tags as string[]).includes(c))) return false;
+      if (filterSeasons.length > 0 && !filterSeasons.some((s) => (i.season_tags as string[]).includes(s))) return false;
       if (search) {
         const q = search.toLowerCase();
         if (
@@ -324,7 +333,8 @@ export default function HomePage() {
 
         {/* Filter */}
         {items.length > 0 && (
-          <div className="flex gap-2 mb-3 flex-wrap items-center">
+          <div className="flex flex-col gap-2 mb-3">
+          <div className="flex gap-2 flex-wrap items-center">
             <div className="relative flex-1 min-w-[200px]">
               <Search
                 size={13}
@@ -358,6 +368,46 @@ export default function HomePage() {
               <option value="formality-asc">casual → formal</option>
               <option value="formality-desc">formal → casual</option>
             </select>
+          </div>
+
+          {/* Context chips */}
+          <div className="flex gap-1.5 flex-wrap">
+            {CONTEXTS.map((c) => (
+              <button
+                key={c}
+                onClick={() => toggleChip(c, filterContexts, setFilterContexts)}
+                className={`px-2.5 py-1 text-[11px] rounded-sm border font-mono tracking-wide transition-colors ${
+                  filterContexts.includes(c)
+                    ? 'bg-accent text-zinc-950 border-accent'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+            <span className="self-center text-zinc-700 text-[10px] ml-1">·</span>
+            {SEASONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => toggleChip(s, filterSeasons, setFilterSeasons)}
+                className={`px-2.5 py-1 text-[11px] rounded-sm border font-mono tracking-wide transition-colors ${
+                  filterSeasons.includes(s)
+                    ? 'bg-accent text-zinc-950 border-accent'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+            {(filterContexts.length > 0 || filterSeasons.length > 0) && (
+              <button
+                onClick={() => { setFilterContexts([]); setFilterSeasons([]); }}
+                className="px-2.5 py-1 text-[11px] rounded-sm border border-zinc-800 text-zinc-600 font-mono"
+              >
+                clear
+              </button>
+            )}
+          </div>
           </div>
         )}
 
