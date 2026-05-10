@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const MODEL = 'gemini-2.5-flash';
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     const { data: items, error } = await supabaseAdmin
       .from('items')
-      .select('name, category, subcategory, color_primary, color_secondary, pattern, material_guess, weight, formality, sleeve_length, season_tags, context_tags, fit, status, notes')
+      .select('name, category, subcategory, color_primary, pattern, material_guess, weight, formality, sleeve_length, season_tags, context_tags, fit, status')
       .order('category');
 
     if (error) {
@@ -44,7 +44,7 @@ ${JSON.stringify(items)}`;
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemText }] },
           contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+          generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
         }),
       }
     );
