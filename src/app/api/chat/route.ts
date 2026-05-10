@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
 You have full access to his wardrobe inventory of ${items.length} items below.
 Be direct, specific, and concise. Reference actual item names when relevant.
 You can: count items, identify gaps, suggest outfits, give style advice, compare pieces, flag duplicates.
+IMPORTANT: Respond in plain text only. No markdown, no asterisks, no bullet symbols like * or **. Use plain dashes or numbers for lists.
 
 WARDROBE (${items.length} items):
 ${JSON.stringify(items)}`;
@@ -43,7 +44,7 @@ ${JSON.stringify(items)}`;
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemText }] },
           contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
         }),
       }
     );
