@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     const { data: items, error } = await supabaseAdmin
       .from('items')
-      .select('name, category, subcategory, color_primary, pattern, material_guess, weight, formality, sleeve_length, season_tags, context_tags, fit, status')
+      .select('name, category, subcategory, color_primary, color_secondary, pattern, material_guess, weight, formality, sleeve_length, season_tags, context_tags, fit, status, notes')
       .order('category');
 
     if (error) {
