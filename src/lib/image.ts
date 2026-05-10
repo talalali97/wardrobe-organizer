@@ -2,41 +2,45 @@
 export async function resizeToBase64(
   file: File,
   maxDim = 800,
-  quality = 0.8
+  quality = 0.8,
+  rotation = 0 // degrees: 0, 90, 180, 270
 ): Promise<{ base64: string; dataUrl: string; mimeType: string }> {
+  // createImageBitmap with imageOrientation:'from-image' auto-corrects EXIF rotation
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+
+  const scale = Math.min(maxDim / bitmap.width, maxDim / bitmap.height, 1);
+  const scaledW = Math.round(bitmap.width * scale);
+  const scaledH = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context unavailable');
+
+  const deg = ((rotation % 360) + 360) % 360;
+  const swap = deg === 90 || deg === 270;
+  canvas.width  = swap ? scaledH : scaledW;
+  canvas.height = swap ? scaledW : scaledH;
+
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate((deg * Math.PI) / 180);
+  ctx.drawImage(bitmap, -scaledW / 2, -scaledH / 2, scaledW, scaledH);
+  bitmap.close();
+
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const canvas = document.createElement('canvas');
-      const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('Canvas context unavailable'));
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return reject(new Error('Resize blob failed'));
-          const reader = new FileReader();
-          reader.onload = () => {
-            const dataUrl = reader.result as string;
-            const base64 = dataUrl.split(',')[1];
-            resolve({ base64, dataUrl, mimeType: 'image/jpeg' });
-          };
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(blob);
-        },
-        'image/jpeg',
-        quality
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Image load failed'));
-    };
-    img.src = objectUrl;
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return reject(new Error('Resize blob failed'));
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result as string;
+          resolve({ base64: dataUrl.split(',')[1], dataUrl, mimeType: 'image/jpeg' });
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      },
+      'image/jpeg',
+      quality
+    );
   });
 }
 

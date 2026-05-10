@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Download, RotateCcw, Search, Loader2 } from 'lucide-react';
+import { Download, RotateCcw, RotateCw, Search, Loader2 } from 'lucide-react';
 import { CATEGORIES, SEASONS, CONTEXTS, type Item } from '@/lib/types';
 import { resizeToBase64, itemsToCsv } from '@/lib/image';
 import { DropZone } from '@/components/DropZone';
@@ -30,6 +30,7 @@ export default function HomePage() {
   const [filterContexts, setFilterContexts] = useState<string[]>([]);
   const [filterSeasons, setFilterSeasons] = useState<string[]>([]);
   const [filterReview, setFilterReview] = useState(false);
+  const [rotation, setRotation] = useState(0);
 
 
   // Load items
@@ -91,7 +92,7 @@ export default function HomePage() {
     window.location.href = '/unlock';
   };
 
-  const processFiles = useCallback(async (files: File[], userHint?: string) => {
+  const processFiles = useCallback(async (files: File[], userHint?: string, userRotation = 0) => {
     const arr = files.filter((f) => f.type.startsWith('image/'));
     if (arr.length === 0) return;
 
@@ -112,7 +113,7 @@ export default function HomePage() {
 
       let resized;
       try {
-        resized = await resizeToBase64(file);
+        resized = await resizeToBase64(file, 800, 0.8, userRotation);
       } catch (e: any) {
         setQueue((prev) =>
           prev.map((x) =>
@@ -281,16 +282,34 @@ export default function HomePage() {
             />
             <div className="flex gap-2">
               <button
-                onClick={() => { setPendingFiles(null); setHint(''); }}
+                onClick={() => { setPendingFiles(null); setHint(''); setRotation(0); }}
                 className="bg-zinc-900 border border-zinc-800 text-zinc-500 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm"
               >
                 Cancel
               </button>
               <button
+                onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
+                className="bg-zinc-900 border border-zinc-800 text-zinc-400 px-3 py-2 rounded-sm"
+                title="Rotate CCW"
+              >
+                <RotateCcw size={13} />
+              </button>
+              <button
+                onClick={() => setRotation((r) => (r + 90) % 360)}
+                className="bg-zinc-900 border border-zinc-800 text-zinc-400 px-3 py-2 rounded-sm"
+                title="Rotate CW"
+              >
+                <RotateCw size={13} />
+              </button>
+              {rotation !== 0 && (
+                <span className="self-center text-[11px] text-accent font-mono">{rotation}°</span>
+              )}
+              <button
                 onClick={() => {
-                  processFiles(pendingFiles, hint);
+                  processFiles(pendingFiles, hint, rotation);
                   setPendingFiles(null);
                   setHint('');
+                  setRotation(0);
                 }}
                 className="flex-1 bg-accent text-zinc-950 px-3 py-2 text-[11px] font-bold tracking-wider uppercase rounded-sm"
               >
