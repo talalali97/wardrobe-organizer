@@ -11,7 +11,8 @@ Classify the visible clothing item with these guidelines:
 - category: bucket the item into one high-level type
 - subcategory: pick the closest match from these lists (do NOT invent new values):
   Top → T-shirt, Polo, Shirt, Henley, Hoodie, Sweatshirt, Tank Top, Kameez, Kurta, Sweater
-  Bottom → Jeans, Chinos, Trousers, Shorts, Wide-leg Trousers, Track Pants, Joggers, Cargo Pants, Sweatpants, Shalwar
+  Bottom → Jeans, Chinos, Dress Pants, Casual Trousers, Shorts, Wide-leg Trousers, Track Pants, Joggers, Cargo Pants, Sweatpants, Shalwar
+  NOTE: Dress Pants = formal tailored pants for office/events. Casual Trousers = loose airy home/lounge pants.
   Outerwear → Jacket, Blazer, Coat, Windbreaker, Hoodie, Gilet
   Shoes → Sneakers, Loafers, Dress Shoes, Sandals, Boots, Slides, Chappals
   Accessory → Watch, Belt, Cap, Sunglasses, Bag, Wallet, Scarf, Bracelet

@@ -2,7 +2,7 @@ export const CATEGORIES = ['Top', 'Bottom', 'Outerwear', 'Shoes', 'Accessory', '
 
 export const SUBCATEGORIES: Record<string, readonly string[]> = {
   Top:        ['T-shirt', 'Polo', 'Shirt', 'Henley', 'Hoodie', 'Sweatshirt', 'Tank Top', 'Kameez', 'Kurta', 'Sweater'],
-  Bottom:     ['Jeans', 'Chinos', 'Trousers', 'Shorts', 'Wide-leg Trousers', 'Track Pants', 'Joggers', 'Cargo Pants', 'Sweatpants', 'Shalwar'],
+  Bottom:     ['Jeans', 'Chinos', 'Dress Pants', 'Casual Trousers', 'Shorts', 'Wide-leg Trousers', 'Track Pants', 'Joggers', 'Cargo Pants', 'Sweatpants', 'Shalwar'],
   Outerwear:  ['Jacket', 'Blazer', 'Coat', 'Windbreaker', 'Hoodie', 'Gilet'],
   Shoes:      ['Sneakers', 'Loafers', 'Dress Shoes', 'Sandals', 'Boots', 'Slides', 'Chappals'],
   Accessory:  ['Watch', 'Belt', 'Cap', 'Sunglasses', 'Bag', 'Wallet', 'Scarf', 'Bracelet'],
