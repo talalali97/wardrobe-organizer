@@ -85,7 +85,6 @@ export async function POST(req: NextRequest) {
         context_tags: classification.context_tags,
         fit: classification.fit,
         status: 'Clean',
-        confidence: classification.confidence,
         notes: classification.notes,
       })
       .select()

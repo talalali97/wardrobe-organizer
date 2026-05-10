@@ -45,7 +45,6 @@ export interface Item {
   context_tags: Context[];
   fit: Fit | null;
   status: Status;
-  confidence: number;
   notes: string;
   created_at: string;
   updated_at: string;
@@ -65,6 +64,5 @@ export interface Classification {
   season_tags: Season[];
   context_tags: Context[];
   fit: Fit;
-  confidence: number;
   notes: string;
 }

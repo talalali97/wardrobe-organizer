@@ -11,7 +11,9 @@ interface ItemCardProps {
 }
 
 export function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
-  const lowConf = (item.confidence || 0) < 0.7;
+  const keyFields = [item.subcategory, item.color_primary, item.pattern, item.material_guess];
+  const missingCount = keyFields.filter((f) => !f || f === 'Unknown').length;
+  const lowConf = missingCount >= 2;
 
   return (
     <div

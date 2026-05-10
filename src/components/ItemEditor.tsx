@@ -92,16 +92,6 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
                 no image
               </div>
             )}
-            <div className="mt-2.5 text-[10px] text-zinc-500 tracking-wider">
-              CONFIDENCE:{' '}
-              <span
-                className={
-                  (draft.confidence || 0) >= 0.7 ? 'text-emerald-400' : 'text-accent'
-                }
-              >
-                {((draft.confidence || 0) * 100).toFixed(0)}%
-              </span>
-            </div>
           </div>
 
           <div>

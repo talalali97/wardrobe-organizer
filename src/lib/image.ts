@@ -48,7 +48,7 @@ export function itemsToCsv(items: any[]): string {
   const cols = [
     'id', 'name', 'category', 'subcategory', 'color_primary', 'color_secondary',
     'pattern', 'material_guess', 'weight', 'formality', 'sleeve_length',
-    'season_tags', 'context_tags', 'fit', 'status', 'confidence', 'notes',
+    'season_tags', 'context_tags', 'fit', 'status', 'notes',
     'image_url', 'created_at'
   ];
   const esc = (v: any) => {

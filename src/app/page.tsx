@@ -30,7 +30,6 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState('newest');
   const [filterContexts, setFilterContexts] = useState<string[]>([]);
   const [filterSeasons, setFilterSeasons] = useState<string[]>([]);
-  const [filterReview, setFilterReview] = useState(false);
   const [rotation, setRotation] = useState(0);
 
 
@@ -173,7 +172,6 @@ export default function HomePage() {
   const filtered = items
     .filter((i) => {
       if (filterCat !== 'all' && i.category !== filterCat) return false;
-      if (filterReview && (i.confidence || 0) >= 0.7) return false;
       if (filterContexts.length > 0 && !filterContexts.some((c) => (i.context_tags as string[]).includes(c))) return false;
       if (filterSeasons.length > 0 && !filterSeasons.some((s) => (i.season_tags as string[]).includes(s))) return false;
       if (search) {
@@ -202,7 +200,6 @@ export default function HomePage() {
     return acc;
   }, {} as Record<string, number>);
 
-  const reviewCount = items.filter((i) => (i.confidence || 0) < 0.7).length;
   const activeQueue = queue.filter((q) => q.status !== 'done');
 
   return (
@@ -253,12 +250,6 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-
-        {reviewCount > 0 && (
-          <div className="mb-3 text-[11px] text-accent">
-            {reviewCount} item{reviewCount > 1 ? 's' : ''} flagged for review
-          </div>
-        )}
 
         {/* Drop zone */}
         <DropZone onFiles={(files) => setPendingFiles(Array.from(files).filter(f => f.type.startsWith('image/')))} />
@@ -391,21 +382,8 @@ export default function HomePage() {
             </select>
           </div>
 
-          {/* Review + Context + Season chips */}
+          {/* Context + Season chips */}
           <div className="flex gap-1.5 flex-wrap">
-            {reviewCount > 0 && (
-              <button
-                onClick={() => setFilterReview((v) => !v)}
-                className={`px-2.5 py-1 text-[11px] rounded-sm border font-mono tracking-wide transition-colors ${
-                  filterReview
-                    ? 'bg-accent text-zinc-950 border-accent'
-                    : 'bg-zinc-900 text-accent border-accent/40'
-                }`}
-              >
-                review ({reviewCount})
-              </button>
-            )}
-            <span className="self-center text-zinc-700 text-[10px]">·</span>
             {CONTEXTS.map((c) => (
               <button
                 key={c}
@@ -433,9 +411,9 @@ export default function HomePage() {
                 {s}
               </button>
             ))}
-            {(filterContexts.length > 0 || filterSeasons.length > 0 || filterReview) && (
+            {(filterContexts.length > 0 || filterSeasons.length > 0) && (
               <button
-                onClick={() => { setFilterContexts([]); setFilterSeasons([]); setFilterReview(false); }}
+                onClick={() => { setFilterContexts([]); setFilterSeasons([]); }}
                 className="px-2.5 py-1 text-[11px] rounded-sm border border-zinc-800 text-zinc-600 font-mono"
               >
                 clear

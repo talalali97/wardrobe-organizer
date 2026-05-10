@@ -21,7 +21,6 @@ Classify the visible clothing item with these guidelines:
 - formality: 1=gym/loungewear, 2=casual, 3=smart casual, 4=business, 5=formal
 - weight: visual fabric thickness — Light for thin breathable, Medium for standard, Heavy for coats/winter wear
 - sleeve_length: use "N/A" for shoes, accessories, and bottoms
-- confidence: 0.0-1.0, your confidence in the overall classification
 - notes: visible details, brand if readable, defects, distinguishing features, or empty string
 
 Return ONLY the JSON object matching the schema. No markdown, no preamble.`;
@@ -42,12 +41,11 @@ const RESPONSE_SCHEMA = {
     season_tags: { type: 'ARRAY', items: { type: 'STRING', enum: ['Summer', 'Winter', 'Monsoon', 'All-year'] } },
     context_tags: { type: 'ARRAY', items: { type: 'STRING', enum: ['Gym', 'Office', 'Casual', 'Going-out', 'Home', 'Street'] } },
     fit: { type: 'STRING', enum: ['Slim', 'Regular', 'Relaxed', 'Oversized', 'Unknown'] },
-    confidence: { type: 'NUMBER' },
     notes: { type: 'STRING' }
   },
   required: ['suggested_name', 'category', 'subcategory', 'color_primary', 'pattern',
     'material_guess', 'weight', 'formality', 'sleeve_length', 'season_tags',
-    'context_tags', 'fit', 'confidence', 'notes']
+    'context_tags', 'fit', 'notes']
 };
 
 export async function classifyImage(base64: string, mimeType: string, hint?: string): Promise<Classification> {
@@ -103,7 +101,6 @@ export async function classifyImage(base64: string, mimeType: string, hint?: str
       // Sanity defaults
       if (!parsed.season_tags) parsed.season_tags = [];
       if (!parsed.context_tags) parsed.context_tags = [];
-      if (typeof parsed.confidence !== 'number') parsed.confidence = 0.5;
       return parsed;
     } catch (e) {
       lastError = e;
@@ -128,7 +125,6 @@ export function emptyClassification(): Classification {
     season_tags: [],
     context_tags: [],
     fit: 'Unknown',
-    confidence: 0,
     notes: 'AI classification failed - please edit manually'
   };
 }
