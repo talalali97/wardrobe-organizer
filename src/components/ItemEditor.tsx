@@ -203,15 +203,18 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
                   {SLEEVES.map((s) => <option key={s}>{s}</option>)}
                 </select>
               </Field>
-              <Field label="Formality 1-5">
-                <input
-                  type="number"
-                  min={1}
-                  max={5}
+              <Field label="Formality">
+                <select
                   className={inputClass}
                   value={draft.formality}
-                  onChange={(e) => update('formality', parseInt(e.target.value) || 3)}
-                />
+                  onChange={(e) => update('formality', parseInt(e.target.value, 10))}
+                >
+                  <option value={1}>1 — Gym / Lounge</option>
+                  <option value={2}>2 — Casual</option>
+                  <option value={3}>3 — Smart Casual</option>
+                  <option value={4}>4 — Business</option>
+                  <option value={5}>5 — Formal</option>
+                </select>
               </Field>
               <Field label="Status">
                 <select
