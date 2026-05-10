@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 
 function UnlockForm() {
   const router = useRouter();
@@ -12,6 +12,7 @@ function UnlockForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,14 +50,23 @@ function UnlockForm() {
           </div>
         </div>
 
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="enter password"
-          autoFocus
-          className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 px-3 py-3 text-sm rounded-sm font-mono"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="enter password"
+            autoFocus
+            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 px-3 py-3 pr-10 text-sm rounded-sm font-mono"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+          >
+            {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        </div>
 
         {error && (
           <div className="mt-3 text-xs text-red-400 text-center">{error}</div>
