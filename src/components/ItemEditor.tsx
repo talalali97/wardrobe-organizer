@@ -8,6 +8,15 @@ import {
 } from '@/lib/types';
 import { Chip } from './Chip';
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-3.5">
+      <div className="text-[10px] tracking-[0.8px] uppercase text-zinc-500 mb-1.5">{label}</div>
+      {children}
+    </div>
+  );
+}
+
 interface ItemEditorProps {
   item: Item;
   onClose: () => void;
@@ -50,13 +59,6 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
 
   const inputClass =
     'w-full bg-zinc-950 border border-zinc-800 text-zinc-50 px-2.5 py-1.5 text-[13px] rounded-sm font-mono';
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="mb-3.5">
-      <div className="text-[10px] tracking-[0.8px] uppercase text-zinc-500 mb-1.5">{label}</div>
-      {children}
-    </div>
-  );
 
   return (
     <div
