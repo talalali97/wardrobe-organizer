@@ -86,6 +86,15 @@ export default function HomePage() {
     }
   };
 
+  const toggleStatus = async (id: string, status: 'Clean' | 'Dirty') => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
+    await fetch(`/api/items/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+  };
+
   const exportCsv = () => {
     if (items.length === 0) return alert('Nothing to export.');
     const csv = itemsToCsv(items);
@@ -508,6 +517,7 @@ export default function HomePage() {
                 item={item}
                 onEdit={setEditing}
                 onDelete={deleteItem}
+                onStatusToggle={toggleStatus}
               />
             ))}
           </div>

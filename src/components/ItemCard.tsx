@@ -8,12 +8,14 @@ interface ItemCardProps {
   item: Item;
   onEdit: (item: Item) => void;
   onDelete: (id: string) => void;
+  onStatusToggle: (id: string, status: 'Clean' | 'Dirty') => void;
 }
 
-export function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
+export function ItemCard({ item, onEdit, onDelete, onStatusToggle }: ItemCardProps) {
   const keyFields = [item.subcategory, item.color_primary, item.pattern, item.material_guess];
   const missingCount = keyFields.filter((f) => !f || f === 'Unknown').length;
   const lowConf = missingCount >= 2;
+  const canToggle = item.status === 'Clean' || item.status === 'Dirty';
 
   return (
     <div
@@ -53,11 +55,21 @@ export function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
           <Trash2 size={11} />
         </button>
 
-        {item.status !== 'Clean' && (
-          <div className="absolute bottom-1.5 right-1.5">
-            <Chip tone="muted">{item.status}</Chip>
-          </div>
-        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (canToggle) onStatusToggle(item.id, item.status === 'Clean' ? 'Dirty' : 'Clean');
+          }}
+          className={`absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm border transition-colors ${
+            item.status === 'Dirty'
+              ? 'bg-accent-dim border-accent-edge text-accent'
+              : item.status === 'Clean'
+              ? 'bg-zinc-950/70 border-zinc-800 text-zinc-700 hover:text-zinc-400 hover:border-zinc-600'
+              : 'bg-zinc-950/70 border-zinc-700 text-zinc-500 cursor-default'
+          }`}
+        >
+          {item.status === 'Clean' ? '✓ clean' : item.status.toLowerCase()}
+        </button>
       </div>
 
       <div className="p-2.5">
