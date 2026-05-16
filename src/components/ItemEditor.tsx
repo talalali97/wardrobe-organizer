@@ -26,8 +26,17 @@ interface ItemEditorProps {
 export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
   const [draft, setDraft] = useState<Item>(item);
   const [saving, setSaving] = useState(false);
+  const [wears, setWears] = useState<{ worn_at: string; context: string | null }[]>([]);
 
   useEffect(() => setDraft(item), [item]);
+
+  useEffect(() => {
+    if (item.wear_count === 0) return;
+    fetch(`/api/items/${item.id}/wears?limit=5`)
+      .then((r) => r.json())
+      .then((d) => setWears(d.wears || []))
+      .catch(() => null);
+  }, [item.id, item.wear_count]);
 
   const update = <K extends keyof Item>(key: K, value: Item[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -252,6 +261,20 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
                 onChange={(e) => update('notes', e.target.value)}
               />
             </Field>
+
+            {wears.length > 0 && (
+              <Field label={`Wear history (${item.wear_count} total)`}>
+                <div className="flex flex-col gap-1">
+                  {wears.map((w, i) => (
+                    <div key={i} className="text-[11px] font-mono text-zinc-500">
+                      {new Date(w.worn_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      <span className="text-zinc-700"> · </span>
+                      {w.context || '—'}
+                    </div>
+                  ))}
+                </div>
+              </Field>
+            )}
 
             <div className="flex gap-2 mt-1">
               <button

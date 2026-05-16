@@ -80,6 +80,9 @@ export function ItemCard({ item, onEdit, onDelete, onStatusToggle }: ItemCardPro
           <Chip tone="accent">{item.category}</Chip>
           {item.color_primary && <Chip>{item.color_primary}</Chip>}
           {item.weight && <Chip tone="muted">{item.weight}</Chip>}
+          {item.days_since_worn != null && item.days_since_worn > 30 && (
+            <Chip tone="muted">{item.days_since_worn}d+</Chip>
+          )}
         </div>
       </div>
     </div>

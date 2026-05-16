@@ -48,6 +48,10 @@ export interface Item {
   notes: string;
   created_at: string;
   updated_at: string;
+  // computed from wear_log via items_with_wear view
+  wear_count: number;
+  last_worn: string | null;
+  days_since_worn: number | null;
 }
 
 export interface Classification {

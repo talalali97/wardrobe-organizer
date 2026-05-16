@@ -87,12 +87,27 @@ export default function HomePage() {
   };
 
   const toggleStatus = async (id: string, status: 'Clean' | 'Dirty') => {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
-    await fetch(`/api/items/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
+    if (status === 'Dirty') {
+      // Log a wear event — RPC atomically inserts wear_log + sets status=Dirty
+      const now = new Date().toISOString();
+      setItems((prev) => prev.map((i) =>
+        i.id === id
+          ? { ...i, status: 'Dirty', wear_count: (i.wear_count || 0) + 1, last_worn: now, days_since_worn: 0 }
+          : i
+      ));
+      await fetch('/api/wear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_id: id }),
+      });
+    } else {
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
+      await fetch(`/api/items/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    }
   };
 
   const exportCsv = () => {
@@ -228,6 +243,9 @@ export default function HomePage() {
   const formalityCounts = [1, 2, 3, 4, 5].map(f => items.filter(i => (i.formality || 3) === f).length);
   const maxFormality = Math.max(...formalityCounts, 1);
 
+  const wornThisWeek = items.filter(i => i.days_since_worn != null && i.days_since_worn <= 7).length;
+  const stale30 = items.filter(i => i.last_worn === null || (i.days_since_worn != null && i.days_since_worn > 30)).length;
+
   const missingCats = CATEGORIES.filter(c => stats[c] === 0);
   const topContext = Object.entries(
     items.reduce((acc, i) => { (i.context_tags || []).forEach(t => { acc[t] = (acc[t] || 0) + 1; }); return acc; }, {} as Record<string, number>)
@@ -313,6 +331,16 @@ export default function HomePage() {
               <span className="text-[10px] text-zinc-600 font-mono">formal</span>
             </div>
             {insight && <span className="text-[11px] text-zinc-500 font-mono">{insight}</span>}
+            <div className="flex gap-3 ml-auto shrink-0">
+              <div className="text-center">
+                <div className="text-[18px] font-bold leading-none">{wornThisWeek}</div>
+                <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">this week</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-[18px] font-bold leading-none ${stale30 > 10 ? 'text-accent' : ''}`}>{stale30}</div>
+                <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">stale 30d+</div>
+              </div>
+            </div>
           </div>
         )}
 

@@ -9,7 +9,7 @@ export const maxDuration = 60;
 // GET /api/items - list all items
 export async function GET() {
   const { data, error } = await supabaseAdmin
-    .from('items')
+    .from('items_with_wear')
     .select('*')
     .order('created_at', { ascending: false });
 
