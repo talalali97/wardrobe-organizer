@@ -1,6 +1,6 @@
 import type { Classification } from './types';
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-3.1-flash-lite';
 
 const PROMPT = `You are classifying a clothing item photo for a wardrobe inventory system.
 
