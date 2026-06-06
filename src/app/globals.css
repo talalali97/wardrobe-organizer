@@ -8,7 +8,7 @@
 }
 
 html, body {
-  background: #0a0a0b;
+  background: #0e0c09;
   color: #fafafa;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -33,9 +33,9 @@ input:focus, select:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #0a0a0b; }
-::-webkit-scrollbar-thumb { background: #27272d; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+::-webkit-scrollbar-track { background: #0e0c09; }
+::-webkit-scrollbar-thumb { background: #262018; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #332b22; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 1s linear infinite; }

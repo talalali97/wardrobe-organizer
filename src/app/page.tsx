@@ -318,54 +318,53 @@ export default function HomePage() {
     <div className="min-h-screen p-3 sm:p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-zinc-800 flex-wrap gap-3">
+        <div className="flex justify-between items-start mb-6 pb-4 border-b border-warm-700 flex-wrap gap-3">
           <div>
-            <div className="text-[11px] tracking-[2px] text-accent uppercase mb-0.5">
-              // inventory.system
+            <div className="text-3xl font-display font-bold tracking-tight leading-none">
+              WARDROBE<span className="text-accent">.</span>LEDGER
             </div>
-            <div className="text-xl font-bold tracking-tight">
-              WARDROBE.<span className="text-accent">LEDGER</span>
+            <div className="text-[10px] font-mono text-zinc-600 tracking-[2px] uppercase mt-1.5">
+              personal inventory · {items.length} items
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 items-center">
             <button
               onClick={exportCsv}
-              className="bg-zinc-950 border border-zinc-800 text-zinc-50 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm flex items-center gap-1.5"
+              className="bg-warm-900 border border-warm-700 text-zinc-400 hover:text-zinc-50 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm flex items-center gap-1.5 transition-colors"
             >
               <Download size={12} /> Export
             </button>
             <button
               onClick={lockOut}
-              className="bg-zinc-950 border border-zinc-800 text-zinc-500 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm flex items-center gap-1.5"
+              className="bg-warm-900 border border-warm-700 text-zinc-600 hover:text-zinc-400 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm flex items-center gap-1.5 transition-colors"
             >
               <RotateCcw size={12} /> Lock
             </button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 mb-4">
-          <div className="bg-zinc-900 border border-accent/20 p-2.5 rounded-sm">
-            <div className="text-[9px] tracking-wider text-accent uppercase">Total</div>
-            <div className="text-2xl font-bold mt-0.5">{items.length}</div>
+        {/* Stats — bento */}
+        <div className="flex gap-2 mb-4">
+          <div className="bg-warm-900 border border-warm-700 rounded-sm p-4 flex flex-col justify-between shrink-0 w-[100px]">
+            <div className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">Total</div>
+            <div className="text-[52px] font-display font-bold leading-none text-zinc-50">{items.length}</div>
+            <div className="text-[9px] font-mono text-zinc-700 uppercase tracking-wider">items</div>
           </div>
-          {CATEGORIES.map((c) => (
-            <div key={c} className="bg-zinc-900 border border-zinc-800 p-2.5 rounded-sm">
-              <div className="text-[9px] tracking-wider text-zinc-500 uppercase">{c}</div>
-              <div
-                className={`text-2xl font-bold mt-0.5 ${
-                  stats[c] > 0 ? 'text-zinc-50' : 'text-zinc-700'
-                }`}
-              >
-                {stats[c]}
+          <div className="flex-1 bg-warm-900 border border-warm-700 rounded-sm p-3 grid grid-cols-2 gap-x-5 gap-y-2 content-center">
+            {CATEGORIES.map((c) => (
+              <div key={c} className="flex items-center justify-between gap-2 min-w-0">
+                <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider truncate">{c}</span>
+                <span className={`text-[17px] font-display font-semibold leading-none shrink-0 ${stats[c] > 0 ? 'text-zinc-100' : 'text-warm-600'}`}>
+                  {stats[c]}
+                </span>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Seasonal rotation banner */}
         {showRotationBanner && (
-          <div className="flex items-center justify-between gap-3 border border-zinc-800 rounded-sm px-3 py-2 mb-3 text-[11px] font-mono text-zinc-500">
+          <div className="flex items-center justify-between gap-3 border border-warm-700 rounded-sm px-3 py-2 mb-3 text-[11px] font-mono text-zinc-600">
             <span>
               ↕ {currentSeason} rotation
               {readyToUnpack.length > 0 && ` · ${readyToUnpack.length} item${readyToUnpack.length > 1 ? 's' : ''} in storage ready to unpack`}
@@ -379,55 +378,43 @@ export default function HomePage() {
 
         {/* Analytics */}
         {items.length >= 5 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-sm px-3 py-2.5 mb-4 flex flex-wrap gap-x-5 gap-y-2 items-center">
+          <div className="bg-warm-900 border border-warm-700 rounded-sm px-3 py-2.5 mb-4 flex flex-wrap gap-x-5 gap-y-2 items-center">
             <div className="flex gap-2.5 flex-wrap items-center">
               {topColors.map(([color, count]) => (
                 <div key={color} className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full border border-white/10 shrink-0" style={{ background: colorToCss(color) }} />
-                  <span className="text-[11px] font-mono text-zinc-400">{color} <span className="text-zinc-600">{count}</span></span>
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: colorToCss(color) }} />
+                  <span className="text-[11px] font-mono text-zinc-500">{color} <span className="text-zinc-700">{count}</span></span>
                 </div>
               ))}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[10px] text-zinc-600 font-mono">gym</span>
-              <div className="flex gap-0.5 items-end h-5">
+              <span className="text-[10px] text-zinc-700 font-mono">gym</span>
+              <div className="flex gap-0.5 items-end h-4">
                 {formalityCounts.map((cnt, i) => (
                   <div
                     key={i}
                     title={['Gym', 'Casual', 'Smart casual', 'Business', 'Formal'][i] + ': ' + cnt}
-                    style={{ height: `${Math.max((cnt / maxFormality) * 20, cnt > 0 ? 3 : 1)}px` }}
-                    className={`w-3.5 rounded-sm ${cnt > 0 ? 'bg-accent/60' : 'bg-zinc-800'}`}
+                    style={{ height: `${Math.max((cnt / maxFormality) * 16, cnt > 0 ? 2 : 1)}px` }}
+                    className={`w-3 rounded-sm ${cnt > 0 ? 'bg-accent/50' : 'bg-warm-700'}`}
                   />
                 ))}
               </div>
-              <span className="text-[10px] text-zinc-600 font-mono">formal</span>
+              <span className="text-[10px] text-zinc-700 font-mono">formal</span>
             </div>
-            {insight && <span className="text-[11px] text-zinc-500 font-mono">{insight}</span>}
-            <div className="flex gap-3 ml-auto shrink-0">
-              <div className="text-center">
-                <div className="text-[18px] font-bold leading-none">{wornThisWeek}</div>
-                <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">this week</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-[18px] font-bold leading-none ${stale30 > 10 ? 'text-accent' : ''}`}>{stale30}</div>
-                <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">stale 30d+</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-[18px] font-bold leading-none ${dupIds.size > 0 ? 'text-accent' : 'text-zinc-700'}`}>{dupIds.size}</div>
-                <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">dupes</div>
-              </div>
-              {valueFmt && (
-                <div className="text-center">
-                  <div className="text-[18px] font-bold leading-none">{valueFmt}</div>
-                  <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">value</div>
+            {insight && <span className="text-[11px] text-zinc-600 font-mono">{insight}</span>}
+            <div className="flex gap-4 ml-auto shrink-0">
+              {[
+                { val: wornThisWeek, label: 'this week', accent: false },
+                { val: stale30, label: 'stale 30d+', accent: stale30 > 10 },
+                { val: dupIds.size, label: 'dupes', accent: dupIds.size > 0 },
+                ...(valueFmt ? [{ val: valueFmt, label: 'value', accent: false }] : []),
+                ...(avgCpw != null ? [{ val: `₨${avgCpw}`, label: 'avg/wear', accent: false }] : []),
+              ].map(({ val, label, accent }) => (
+                <div key={label} className="text-center">
+                  <div className={`text-[17px] font-display font-semibold leading-none ${accent ? 'text-accent' : 'text-zinc-300'}`}>{val}</div>
+                  <div className="text-[9px] text-zinc-700 font-mono tracking-wider mt-0.5">{label}</div>
                 </div>
-              )}
-              {avgCpw != null && (
-                <div className="text-center">
-                  <div className="text-[18px] font-bold leading-none">₨{avgCpw}</div>
-                  <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">avg/wear</div>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         )}
@@ -621,7 +608,7 @@ export default function HomePage() {
         {loading ? (
           <div className="p-10 text-center text-zinc-500 text-[12px]">Loading...</div>
         ) : filtered.length === 0 ? (
-          <div className="p-10 text-center text-zinc-700 text-[12px] border border-dashed border-zinc-800 rounded-sm">
+          <div className="p-10 text-center text-zinc-700 text-[12px] font-mono border border-dashed border-warm-700 rounded-sm">
             {items.length === 0
               ? 'NO ITEMS YET. UPLOAD SOMETHING ABOVE.'
               : 'NO ITEMS MATCH YOUR FILTER.'}
@@ -644,8 +631,8 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="mt-7 pt-3 border-t border-zinc-800 text-[10px] text-zinc-700 text-center tracking-wider">
-          POWERED BY GEMINI 2.5 FLASH · DATA IN SUPABASE
+        <div className="mt-7 pt-3 border-t border-warm-700 text-[10px] text-zinc-700 text-center tracking-widest font-mono">
+          POWERED BY GEMINI · DATA IN SUPABASE
         </div>
       </div>
 

@@ -2,7 +2,6 @@
 
 import { AlertCircle, Trash2 } from 'lucide-react';
 import type { Item } from '@/lib/types';
-import { Chip } from './Chip';
 
 interface ItemCardProps {
   item: Item;
@@ -18,80 +17,81 @@ export function ItemCard({ item, onEdit, onDelete, onStatusToggle, isDuplicate }
   const lowConf = missingCount >= 2;
   const canToggle = item.status === 'Clean' || item.status === 'Dirty';
 
+  const sublabel = [item.subcategory, item.color_primary].filter(Boolean).join(' · ');
+
   return (
     <div
       onClick={() => onEdit(item)}
-      className={`group bg-zinc-900 border rounded-sm overflow-hidden cursor-pointer transition-colors hover:border-accent ${
-        lowConf ? 'border-accent/40' : 'border-zinc-800'
+      className={`group bg-warm-900 border rounded-sm overflow-hidden cursor-pointer transition-all hover:border-accent hover:-translate-y-px ${
+        lowConf ? 'border-accent/30' : 'border-warm-700'
       }`}
     >
-      <div className="aspect-square bg-zinc-950 relative overflow-hidden">
+      {/* Image — portrait ratio */}
+      <div className="aspect-[3/4] bg-warm-950 relative overflow-hidden">
         {item.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={item.image_url}
             alt={item.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             loading="lazy"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-zinc-700 text-[11px] uppercase tracking-wider">
+          <div className="absolute inset-0 flex items-center justify-center text-warm-600 text-[10px] uppercase tracking-widest font-mono">
             no image
           </div>
         )}
 
+        {/* Top-left: delete */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+          className="absolute top-2 left-2 w-6 h-6 bg-warm-950/80 border border-warm-700 text-zinc-500 rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 hover:text-red-400 hover:border-red-400/50 transition-all"
+        >
+          <Trash2 size={10} />
+        </button>
+
+        {/* Top-right: review / dup badge */}
         {lowConf ? (
-          <div className="absolute top-1.5 right-1.5 bg-accent-dim border border-accent-edge text-accent px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm flex items-center gap-1">
-            <AlertCircle size={9} /> REVIEW
+          <div className="absolute top-2 right-2 bg-warm-950/80 border border-accent/40 text-accent px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm flex items-center gap-1 font-mono">
+            <AlertCircle size={8} /> REVIEW
           </div>
         ) : isDuplicate ? (
-          <div className="absolute top-1.5 right-1.5 bg-zinc-900/80 border border-zinc-700 text-zinc-500 px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm">
+          <div className="absolute top-2 right-2 bg-warm-950/80 border border-warm-600 text-zinc-600 px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm font-mono">
             DUP
           </div>
         ) : null}
 
+        {/* Bottom-right: status toggle */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(item.id);
-          }}
-          className="absolute top-1.5 left-1.5 w-6 h-6 bg-zinc-950/85 border border-zinc-800 text-zinc-400 rounded-sm flex items-center justify-center hover:text-red-400 hover:border-red-400 transition-colors"
-        >
-          <Trash2 size={11} />
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (canToggle) onStatusToggle(item.id, item.status === 'Clean' ? 'Dirty' : 'Clean');
-          }}
-          className={`absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm border transition-colors ${
+          onClick={(e) => { e.stopPropagation(); if (canToggle) onStatusToggle(item.id, item.status === 'Clean' ? 'Dirty' : 'Clean'); }}
+          className={`absolute bottom-2 right-2 px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm border font-mono transition-colors ${
             item.status === 'Dirty'
-              ? 'bg-accent-dim border-accent-edge text-accent'
+              ? 'bg-accent-dim border-accent/40 text-accent'
               : item.status === 'Clean'
-              ? 'bg-zinc-950/70 border-zinc-800 text-zinc-700 hover:text-zinc-400 hover:border-zinc-600'
-              : 'bg-zinc-950/70 border-zinc-700 text-zinc-500 cursor-default'
+              ? 'bg-warm-950/60 border-warm-600 text-zinc-700 hover:text-zinc-400 hover:border-zinc-600 opacity-0 group-hover:opacity-100'
+              : 'bg-warm-950/60 border-warm-600 text-zinc-600 cursor-default'
           }`}
         >
-          {item.status === 'Clean' ? '✓ clean' : item.status.toLowerCase()}
+          {item.status === 'Clean' ? '✓' : item.status.toLowerCase()}
         </button>
       </div>
 
-      <div className="p-2.5">
-        <div className="text-[13px] font-medium mb-1.5 truncate">
+      {/* Info */}
+      <div className="p-2.5 pt-2">
+        {sublabel && (
+          <div className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-1 truncate">
+            {sublabel}
+          </div>
+        )}
+        <div className="text-[13px] font-display font-medium leading-tight truncate text-zinc-100">
           {item.name}
         </div>
-        <div className="flex flex-wrap gap-1">
-          <Chip tone="accent">{item.category}</Chip>
-          {item.color_primary && <Chip>{item.color_primary}</Chip>}
-          {item.weight && <Chip tone="muted">{item.weight}</Chip>}
-          {item.days_since_worn != null && item.days_since_worn > 30 && (
-            <Chip tone="muted">{item.days_since_worn}d+</Chip>
-          )}
-          {item.price != null && item.wear_count > 0 && item.price / item.wear_count > 500 && (
-            <Chip tone="muted">₨{Math.round(item.price / item.wear_count)}/w</Chip>
-          )}
-        </div>
+        {/* Only show cost-per-wear if actionably high — no other chips */}
+        {item.price != null && item.wear_count > 0 && item.price / item.wear_count > 500 && (
+          <div className="mt-1.5 text-[9px] font-mono text-zinc-600">
+            ₨{Math.round(item.price / item.wear_count)}/wear
+          </div>
+        )}
       </div>
     </div>
   );

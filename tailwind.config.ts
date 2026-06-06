@@ -5,6 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
+        display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       colors: {
@@ -12,6 +13,13 @@ const config: Config = {
           DEFAULT: '#fb923c',
           dim: '#3a1f0a',
           edge: '#7a3d10'
+        },
+        warm: {
+          950: '#0e0c09',
+          900: '#151210',
+          800: '#1d1913',
+          700: '#262018',
+          600: '#332b22',
         }
       },
       animation: {
