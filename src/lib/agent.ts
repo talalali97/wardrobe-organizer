@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase';
 import { getWeather } from './weather';
+import { getStyleProfile } from './styleProfile';
 
 const MODEL = 'gemini-3.1-flash-lite';
 
@@ -198,6 +199,11 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
 
+  const styleProfile = await getStyleProfile();
+  const systemPrompt = styleProfile
+    ? `${SYSTEM_PROMPT}\n\n${styleProfile}`
+    : SYSTEM_PROMPT;
+
   const contents: any[] = [
     ...history,
     { role: 'user', parts: [{ text: userMessage }] },
@@ -210,7 +216,7 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        system_instruction: { parts: [{ text: systemPrompt }] },
         contents,
         tools: TOOLS,
         tool_config: { function_calling_config: { mode: 'AUTO' } },
