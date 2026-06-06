@@ -93,26 +93,30 @@ export default function HomePage() {
   };
 
   const toggleStatus = async (id: string, status: 'Clean' | 'Dirty') => {
+    const prev = items.find((i) => i.id === id);
+    if (!prev) return;
+
     if (status === 'Dirty') {
-      // Log a wear event — RPC atomically inserts wear_log + sets status=Dirty
       const now = new Date().toISOString();
-      setItems((prev) => prev.map((i) =>
+      setItems((all) => all.map((i) =>
         i.id === id
           ? { ...i, status: 'Dirty', wear_count: (i.wear_count || 0) + 1, last_worn: now, days_since_worn: 0 }
           : i
       ));
-      await fetch('/api/wear', {
+      const res = await fetch('/api/wear', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ item_id: id }),
       });
+      if (!res.ok) setItems((all) => all.map((i) => (i.id === id ? prev : i)));
     } else {
-      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
-      await fetch(`/api/items/${id}`, {
+      setItems((all) => all.map((i) => (i.id === id ? { ...i, status } : i)));
+      const res = await fetch(`/api/items/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
+      if (!res.ok) setItems((all) => all.map((i) => (i.id === id ? prev : i)));
     }
   };
 

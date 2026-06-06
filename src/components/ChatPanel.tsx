@@ -62,33 +62,43 @@ function OutfitCardView({ outfit, onOutcome }: {
 
   const handleWore = async () => {
     setLoading(true);
-    await Promise.all(
-      outfit.item_ids.map((item_id) =>
-        fetch('/api/wear', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ item_id }),
-        })
-      )
-    );
-    await fetch(`/api/outfits/${outfit.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ outcome: 'worn' }),
-    });
-    onOutcome(outfit.id, 'worn');
-    setLoading(false);
+    try {
+      await Promise.all(
+        outfit.item_ids.map((item_id) =>
+          fetch('/api/wear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id }),
+          })
+        )
+      );
+      await fetch(`/api/outfits/${outfit.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome: 'worn' }),
+      });
+      onOutcome(outfit.id, 'worn');
+    } catch (e) {
+      console.error('Failed to log wear:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSkip = async () => {
     setLoading(true);
-    await fetch(`/api/outfits/${outfit.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ outcome: 'skipped' }),
-    });
-    onOutcome(outfit.id, 'skipped');
-    setLoading(false);
+    try {
+      await fetch(`/api/outfits/${outfit.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome: 'skipped' }),
+      });
+      onOutcome(outfit.id, 'skipped');
+    } catch (e) {
+      console.error('Failed to skip outfit:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

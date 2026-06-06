@@ -31,7 +31,7 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
   useEffect(() => setDraft(item), [item]);
 
   useEffect(() => {
-    if (item.wear_count === 0) return;
+    if (!item.wear_count) return;
     fetch(`/api/items/${item.id}/wears?limit=5`)
       .then((r) => r.json())
       .then((d) => setWears(d.wears || []))
@@ -126,7 +126,7 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
                 <select
                   className={inputClass}
                   value={draft.subcategory || ''}
-                  onChange={(e) => update('subcategory', e.target.value)}
+                  onChange={(e) => update('subcategory', e.target.value || null)}
                 >
                   <option value="">— select —</option>
                   {(SUBCATEGORIES[draft.category] ?? []).map((s) => (
@@ -273,7 +273,7 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
             </Field>
 
             {wears.length > 0 && (
-              <Field label={`Wear history (${item.wear_count} total)`}>
+              <Field label={`Wear history (${item.wear_count ?? 0} total)`}>
                 <div className="flex flex-col gap-1">
                   {wears.map((w, i) => (
                     <div key={i} className="text-[11px] font-mono text-zinc-500">

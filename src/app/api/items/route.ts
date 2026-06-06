@@ -93,7 +93,6 @@ export async function POST(req: NextRequest) {
 
     if (insertError) {
       console.error('Insert failed:', insertError);
-      // Clean up the uploaded image if DB insert failed
       await supabaseAdmin.storage.from(STORAGE_BUCKET).remove([filename]);
       return NextResponse.json(
         { error: `DB: ${insertError.message}` },
@@ -101,7 +100,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ item, classifyFailed });
+    // Return full item with computed wear fields from view
+    const { data: fullItem } = await supabaseAdmin
+      .from('items_with_wear')
+      .select('*')
+      .eq('id', item!.id)
+      .single();
+
+    return NextResponse.json({ item: fullItem ?? item, classifyFailed });
   } catch (e: any) {
     console.error('POST /api/items error:', e);
     return NextResponse.json(

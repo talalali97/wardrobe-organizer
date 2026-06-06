@@ -21,17 +21,23 @@ export async function PATCH(
       if (k in updates) safe[k] = updates[k];
     }
 
-    const { data, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('items')
       .update(safe)
-      .eq('id', params.id)
-      .select()
-      .single();
+      .eq('id', params.id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ item: data });
+
+    // Return full item with computed wear fields from view
+    const { data: fullItem } = await supabaseAdmin
+      .from('items_with_wear')
+      .select('*')
+      .eq('id', params.id)
+      .single();
+
+    return NextResponse.json({ item: fullItem });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 });
   }
