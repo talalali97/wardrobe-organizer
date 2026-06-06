@@ -65,6 +65,9 @@ Propose as many outfits as the context needs. Each one needs:
 - A sharp context_label ("Ministry meeting", "Evening out", "Travel day", "Hotel lounge")
 - Reasoning that covers: why it looks good, weather fit, formality, and what makes it intentional — not just functional
 
+CRITICAL — ALWAYS USE propose_outfit:
+Never write an outfit suggestion as plain text. If you are recommending specific items from the wardrobe, you MUST call propose_outfit — every single time, no exceptions. This is what renders the outfit as a visual card with photos. Writing item names in text instead of calling the tool is always wrong.
+
 IMPORTANT: Respond in plain text only. No markdown, no asterisks, no bullet symbols.`;
 
 const TOOLS = [{
