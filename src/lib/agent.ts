@@ -1,6 +1,7 @@
 import { supabaseAdmin } from './supabase';
 import { getWeather } from './weather';
 import { getStyleProfile } from './styleProfile';
+import { searchFashion } from './search';
 
 const MODEL = 'gemini-3.1-flash-lite';
 
@@ -97,6 +98,17 @@ const TOOLS = [{
       },
     },
     {
+      name: 'search_web',
+      description: "Search the web for current fashion trends, styling advice, or style inspiration. Use when the user asks about what's in style, how to style something, or needs fashion context beyond the wardrobe. Do NOT use for wardrobe inventory questions — use query_wardrobe for those.",
+      parameters: {
+        type: 'OBJECT',
+        required: ['query'],
+        properties: {
+          query: { type: 'STRING', description: "Fashion/style search query, e.g. \"men's quiet luxury 2025\" or \"how to style olive chinos smart casual\"" },
+        },
+      },
+    },
+    {
       name: 'propose_outfit',
       description: 'Submit one complete outfit recommendation. Call once per outfit — call as many times as the context requires. For trips, call enough times to cover every activity type across all days.',
       parameters: {
@@ -117,6 +129,14 @@ async function executeTool(name: string, args: any): Promise<{ result: any; outf
     case 'get_weather': {
       try {
         return { result: await getWeather(args.city) };
+      } catch (e: any) {
+        return { result: { error: e.message } };
+      }
+    }
+
+    case 'search_web': {
+      try {
+        return { result: await searchFashion(args.query) };
       } catch (e: any) {
         return { result: { error: e.message } };
       }
