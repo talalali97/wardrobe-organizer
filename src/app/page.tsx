@@ -360,9 +360,9 @@ export default function HomePage() {
 
         {/* Stats — bento */}
         <div className="flex gap-2 mb-4">
-          <div className="bg-warm-900 border border-warm-700 rounded-sm p-4 flex flex-col justify-between shrink-0 w-[100px]">
+          <div className="bg-warm-900 border border-warm-700 rounded-sm p-3 flex flex-col justify-between shrink-0 w-[90px]">
             <div className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">Total</div>
-            <div className="text-[52px] font-display font-bold leading-none text-zinc-50">{items.length}</div>
+            <div className="text-[42px] font-display font-bold leading-none text-zinc-50">{items.length}</div>
             <div className="text-[9px] font-mono text-zinc-700 uppercase tracking-wider">items</div>
           </div>
           <div className="flex-1 bg-warm-900 border border-warm-700 rounded-sm p-3 grid grid-cols-2 gap-x-5 gap-y-2 content-center">
