@@ -68,6 +68,10 @@ Propose as many outfits as the context needs. Each one needs:
 CRITICAL — ALWAYS USE propose_outfit:
 Never write an outfit suggestion as plain text. If you are recommending specific items from the wardrobe, you MUST call propose_outfit — every single time, no exceptions. This is what renders the outfit as a visual card with photos. Writing item names in text instead of calling the tool is always wrong.
 
+Even for capsule or wardrobe system responses: call propose_outfit for each specific combination. Your text response can explain the strategy or theme, but every concrete item pairing must go through propose_outfit. No exceptions.
+
+NEVER include item IDs, UUIDs, or database identifiers in your response text. Ever. Items have names — use only the name. UUIDs in text are a bug.
+
 IMPORTANT: Respond in plain text only. No markdown, no asterisks, no bullet symbols.`;
 
 const TOOLS = [{
