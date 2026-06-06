@@ -9,9 +9,10 @@ interface ItemCardProps {
   onEdit: (item: Item) => void;
   onDelete: (id: string) => void;
   onStatusToggle: (id: string, status: 'Clean' | 'Dirty') => void;
+  isDuplicate?: boolean;
 }
 
-export function ItemCard({ item, onEdit, onDelete, onStatusToggle }: ItemCardProps) {
+export function ItemCard({ item, onEdit, onDelete, onStatusToggle, isDuplicate }: ItemCardProps) {
   const keyFields = [item.subcategory, item.color_primary, item.pattern, item.material_guess];
   const missingCount = keyFields.filter((f) => !f || f === 'Unknown').length;
   const lowConf = missingCount >= 2;
@@ -39,11 +40,15 @@ export function ItemCard({ item, onEdit, onDelete, onStatusToggle }: ItemCardPro
           </div>
         )}
 
-        {lowConf && (
+        {lowConf ? (
           <div className="absolute top-1.5 right-1.5 bg-accent-dim border border-accent-edge text-accent px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm flex items-center gap-1">
             <AlertCircle size={9} /> REVIEW
           </div>
-        )}
+        ) : isDuplicate ? (
+          <div className="absolute top-1.5 right-1.5 bg-zinc-900/80 border border-zinc-700 text-zinc-500 px-1.5 py-0.5 text-[9px] tracking-wider rounded-sm">
+            DUP
+          </div>
+        ) : null}
 
         <button
           onClick={(e) => {

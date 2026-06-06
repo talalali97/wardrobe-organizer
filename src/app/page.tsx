@@ -245,6 +245,19 @@ export default function HomePage() {
   const formalityCounts = [1, 2, 3, 4, 5].map(f => items.filter(i => (i.formality || 3) === f).length);
   const maxFormality = Math.max(...formalityCounts, 1);
 
+  const dupIds = (() => {
+    const groups: Record<string, string[]> = {};
+    for (const item of items) {
+      if (!item.subcategory || !item.color_primary) continue;
+      const key = `${item.category}|${item.subcategory}|${item.color_primary}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item.id);
+    }
+    const ids = new Set<string>();
+    for (const g of Object.values(groups)) if (g.length >= 2) g.forEach(id => ids.add(id));
+    return ids;
+  })();
+
   const wornThisWeek = items.filter(i => i.days_since_worn != null && i.days_since_worn <= 7).length;
   const stale30 = items.filter(i => i.last_worn === null || (i.days_since_worn != null && i.days_since_worn > 30)).length;
 
@@ -351,6 +364,10 @@ export default function HomePage() {
               <div className="text-center">
                 <div className={`text-[18px] font-bold leading-none ${stale30 > 10 ? 'text-accent' : ''}`}>{stale30}</div>
                 <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">stale 30d+</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-[18px] font-bold leading-none ${dupIds.size > 0 ? 'text-accent' : 'text-zinc-700'}`}>{dupIds.size}</div>
+                <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">dupes</div>
               </div>
               {valueFmt && (
                 <div className="text-center">
@@ -574,6 +591,7 @@ export default function HomePage() {
                 onEdit={setEditing}
                 onDelete={deleteItem}
                 onStatusToggle={toggleStatus}
+                isDuplicate={dupIds.has(item.id)}
               />
             ))}
           </div>
