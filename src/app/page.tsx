@@ -312,6 +312,13 @@ export default function HomePage() {
     ? `No ${missingCats.slice(0, 2).join(' · ')}`
     : topContext ? `${topContext}-heavy` : '';
 
+  const dirtyCount = items.filter(i => i.status === 'Dirty').length;
+
+  const markAllClean = async () => {
+    setItems(prev => prev.map(i => i.status === 'Dirty' ? { ...i, status: 'Clean' as const } : i));
+    await fetch('/api/items/bulk-clean', { method: 'POST' });
+  };
+
   const activeQueue = queue.filter((q) => q.status !== 'done');
 
   return (
@@ -327,7 +334,15 @@ export default function HomePage() {
               personal inventory · {items.length} items
             </div>
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap">
+            {dirtyCount > 0 && (
+              <button
+                onClick={markAllClean}
+                className="bg-accent-dim border border-accent/30 text-accent px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm flex items-center gap-1.5 transition-colors hover:border-accent/60"
+              >
+                {dirtyCount} dirty · mark all clean
+              </button>
+            )}
             <button
               onClick={exportCsv}
               className="bg-warm-900 border border-warm-700 text-zinc-400 hover:text-zinc-50 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm flex items-center gap-1.5 transition-colors"
