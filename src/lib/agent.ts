@@ -203,10 +203,21 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
 
+  // Pre-fetch item count so the agent always knows inventory isn't empty
+  const { count: itemCount } = await supabaseAdmin
+    .from('items')
+    .select('*', { count: 'exact', head: true });
+
   const styleProfile = await getStyleProfile();
-  const systemPrompt = styleProfile
-    ? `${SYSTEM_PROMPT}\n\n${styleProfile}`
-    : SYSTEM_PROMPT;
+
+  const inventoryNote = `
+== INVENTORY ACCESS ==
+Talal's wardrobe has ${itemCount ?? 'many'} items in the database RIGHT NOW.
+NEVER tell him you can't see his wardrobe, that it's empty, or that you need him to list his items manually.
+Before answering ANY question about specific items, outfits, or what he owns — call query_wardrobe first.
+The tool works. Use it.`;
+
+  const systemPrompt = [SYSTEM_PROMPT, inventoryNote, styleProfile].filter(Boolean).join('\n\n');
 
   const contents: any[] = [
     ...history,
