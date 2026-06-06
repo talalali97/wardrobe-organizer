@@ -227,7 +227,6 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 8192,
-          thinkingConfig: { thinkingBudget: 16384 },
         },
       }),
     });
@@ -238,12 +237,25 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
     }
 
     const data = await res.json();
-    const parts: any[] = data?.candidates?.[0]?.content?.parts || [];
+
+    const candidate = data?.candidates?.[0];
+    if (!candidate) {
+      const reason = data?.promptFeedback?.blockReason;
+      console.error('Agent: no candidate returned. Block reason:', reason, JSON.stringify(data).slice(0, 300));
+      return { answer: 'The request was blocked or returned no response. Try rephrasing.', outfitIds };
+    }
+
+    const parts: any[] = candidate?.content?.parts || [];
     const functionCallParts = parts.filter((p: any) => p.functionCall);
 
     if (functionCallParts.length === 0) {
-      const text = parts.find((p: any) => p.text)?.text;
-      return { answer: text || 'No response.', outfitIds };
+      // Skip thought parts (Gemini 3.x returns these alongside the real response)
+      const textPart = parts.find((p: any) => p.text && !p.thought);
+      const text = textPart?.text || parts.find((p: any) => typeof p.text === 'string')?.text;
+      if (!text) {
+        console.error('Agent: no text in parts:', JSON.stringify(parts).slice(0, 300));
+      }
+      return { answer: text || 'Something went wrong — try again.', outfitIds };
     }
 
     // Preserve full model content verbatim (including thoughtSignature)
