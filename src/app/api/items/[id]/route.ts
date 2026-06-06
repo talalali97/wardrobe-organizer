@@ -14,7 +14,7 @@ export async function PATCH(
     const allowed = [
       'name', 'category', 'subcategory', 'color_primary', 'color_secondary',
       'pattern', 'material_guess', 'weight', 'formality', 'sleeve_length',
-      'season_tags', 'context_tags', 'fit', 'status', 'notes'
+      'season_tags', 'context_tags', 'fit', 'status', 'price', 'notes'
     ];
     const safe: Record<string, any> = {};
     for (const k of allowed) {

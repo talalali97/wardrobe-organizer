@@ -39,6 +39,7 @@ export default function HomePage() {
   const [filterCat, setFilterCat] = useState<string>('all');
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
   const [hint, setHint] = useState('');
+  const [price, setPrice] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [filterContexts, setFilterContexts] = useState<string[]>([]);
   const [filterSeasons, setFilterSeasons] = useState<string[]>([]);
@@ -128,7 +129,7 @@ export default function HomePage() {
     window.location.href = '/unlock';
   };
 
-  const processFiles = useCallback(async (files: File[], userHint?: string, userRotation = 0) => {
+  const processFiles = useCallback(async (files: File[], userHint?: string, userRotation = 0, userPrice?: string) => {
     const arr = files.filter((f) => f.type.startsWith('image/'));
     if (arr.length === 0) return;
 
@@ -173,6 +174,7 @@ export default function HomePage() {
             imageBase64: resized.base64,
             mimeType: resized.mimeType,
             hint: userHint || undefined,
+            price: userPrice ? Number(userPrice) : undefined,
           }),
         });
         if (!res.ok) {
@@ -245,6 +247,16 @@ export default function HomePage() {
 
   const wornThisWeek = items.filter(i => i.days_since_worn != null && i.days_since_worn <= 7).length;
   const stale30 = items.filter(i => i.last_worn === null || (i.days_since_worn != null && i.days_since_worn > 30)).length;
+
+  const wardrobeValue = items.reduce((sum, i) => sum + (i.price ?? 0), 0);
+  const valueFmt = wardrobeValue >= 1000
+    ? `₨${(wardrobeValue / 1000).toFixed(wardrobeValue >= 10000 ? 0 : 1)}k`
+    : wardrobeValue > 0 ? `₨${wardrobeValue}` : null;
+
+  const cpwItems = items.filter(i => i.price != null && i.wear_count > 0);
+  const avgCpw = cpwItems.length > 0
+    ? Math.round(cpwItems.reduce((sum, i) => sum + i.price! / i.wear_count, 0) / cpwItems.length)
+    : null;
 
   const missingCats = CATEGORIES.filter(c => stats[c] === 0);
   const topContext = Object.entries(
@@ -340,6 +352,18 @@ export default function HomePage() {
                 <div className={`text-[18px] font-bold leading-none ${stale30 > 10 ? 'text-accent' : ''}`}>{stale30}</div>
                 <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">stale 30d+</div>
               </div>
+              {valueFmt && (
+                <div className="text-center">
+                  <div className="text-[18px] font-bold leading-none">{valueFmt}</div>
+                  <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">value</div>
+                </div>
+              )}
+              {avgCpw != null && (
+                <div className="text-center">
+                  <div className="text-[18px] font-bold leading-none">₨{avgCpw}</div>
+                  <div className="text-[9px] text-zinc-600 font-mono tracking-wider mt-0.5">avg/wear</div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -350,24 +374,27 @@ export default function HomePage() {
         {/* Hint input — shown after file selection, before processing */}
         {pendingFiles && pendingFiles.length > 0 && (
           <div className="mt-2 flex flex-col gap-2">
-            <input
-              type="text"
-              placeholder={`Describe the item (optional) — helps AI classify better, e.g. "linen shirt, beige"`}
-              value={hint}
-              onChange={(e) => setHint(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  processFiles(pendingFiles, hint);
-                  setPendingFiles(null);
-                  setHint('');
-                }
-              }}
-              className="w-full bg-zinc-900 border border-zinc-700 text-zinc-50 px-3 py-2 text-[12px] rounded-sm font-mono placeholder:text-zinc-600"
-              autoFocus
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder={`Describe the item (optional) — e.g. "linen shirt, beige"`}
+                value={hint}
+                onChange={(e) => setHint(e.target.value)}
+                className="flex-1 bg-zinc-900 border border-zinc-700 text-zinc-50 px-3 py-2 text-[12px] rounded-sm font-mono placeholder:text-zinc-600"
+                autoFocus
+              />
+              <input
+                type="number"
+                placeholder="Price ₨"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                min="0"
+                className="w-24 bg-zinc-900 border border-zinc-700 text-zinc-50 px-3 py-2 text-[12px] rounded-sm font-mono placeholder:text-zinc-600"
+              />
+            </div>
             <div className="flex gap-2">
               <button
-                onClick={() => { setPendingFiles(null); setHint(''); setRotation(0); }}
+                onClick={() => { setPendingFiles(null); setHint(''); setPrice(''); setRotation(0); }}
                 className="bg-zinc-900 border border-zinc-800 text-zinc-500 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm"
               >
                 Cancel
@@ -391,9 +418,10 @@ export default function HomePage() {
               )}
               <button
                 onClick={() => {
-                  processFiles(pendingFiles, hint, rotation);
+                  processFiles(pendingFiles, hint, rotation, price);
                   setPendingFiles(null);
                   setHint('');
+                  setPrice('');
                   setRotation(0);
                 }}
                 className="flex-1 bg-accent text-zinc-950 px-3 py-2 text-[11px] font-bold tracking-wider uppercase rounded-sm"

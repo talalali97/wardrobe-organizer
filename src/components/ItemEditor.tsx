@@ -224,6 +224,16 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
                   {STATUSES.map((s) => <option key={s}>{s}</option>)}
                 </select>
               </Field>
+              <Field label="Price (₨)">
+                <input
+                  type="number"
+                  className={inputClass}
+                  value={draft.price ?? ''}
+                  min={0}
+                  placeholder="optional"
+                  onChange={(e) => update('price', e.target.value ? Number(e.target.value) : null)}
+                />
+              </Field>
             </div>
 
             <Field label="Seasons">

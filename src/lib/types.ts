@@ -45,6 +45,7 @@ export interface Item {
   context_tags: Context[];
   fit: Fit | null;
   status: Status;
+  price: number | null;
   notes: string;
   created_at: string;
   updated_at: string;

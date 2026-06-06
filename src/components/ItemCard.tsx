@@ -83,6 +83,9 @@ export function ItemCard({ item, onEdit, onDelete, onStatusToggle }: ItemCardPro
           {item.days_since_worn != null && item.days_since_worn > 30 && (
             <Chip tone="muted">{item.days_since_worn}d+</Chip>
           )}
+          {item.price != null && item.wear_count > 0 && item.price / item.wear_count > 500 && (
+            <Chip tone="muted">₨{Math.round(item.price / item.wear_count)}/w</Chip>
+          )}
         </div>
       </div>
     </div>
