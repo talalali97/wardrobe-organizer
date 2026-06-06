@@ -41,14 +41,14 @@ export async function getStyleProfile(): Promise<string> {
 
   const nameOf = (id: string) => items.find(i => i.id === id)?.name ?? id;
 
-  const lines: string[] = ['STYLE HISTORY (learned from past outfit decisions):'];
+  const lines: string[] = ['STYLE HISTORY (learned from Talal\'s actual outfit choices):'];
   if (preferredIds.length > 0) {
-    lines.push(`Items Talal consistently wears: ${preferredIds.map(nameOf).join(', ')}`);
+    lines.push(`Reaches for these: ${preferredIds.map(nameOf).join(', ')}`);
   }
   if (avoidedIds.length > 0) {
-    lines.push(`Items he consistently skips: ${avoidedIds.map(nameOf).join(', ')}`);
+    lines.push(`Consistently skips these: ${avoidedIds.map(nameOf).join(', ')}`);
   }
-  lines.push('Bias toward preferred items. Avoid repeatedly suggesting skipped items unless nothing else fits.');
+  lines.push('Prioritise what he actually wears. Don\'t keep suggesting things he skips.');
 
   return lines.join('\n');
 }
