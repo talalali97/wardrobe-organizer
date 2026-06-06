@@ -1,32 +1,101 @@
 import { supabaseAdmin } from './supabase';
-import { getKarachiWeather } from './weather';
+import { getWeather } from './weather';
 
 const MODEL = 'gemini-3.1-flash-lite';
 
-const SYSTEM_PROMPT = `You are an outfit planning assistant for Talal, who lives in Karachi, Pakistan.
-Karachi is hot most of the year (often 30-42°C). Monsoon brings humidity and rain.
-Always check weather before proposing outfits. Always query the wardrobe filtered to status=Clean.
-For rotation, prefer items with min_days_since_worn >= 2 unless the user requests something specific.
+const SYSTEM_PROMPT = `You are an expert outfit planning assistant for Talal, based in Karachi, Pakistan.
 
-When proposing outfits:
-- Coherent formality (don't mix gym shorts with a blazer)
-- Weight matches temperature (Light for 30°C+, Medium for 22-30°C, Heavy below 22°C)
-- Avoid pattern-on-pattern unless intentional
-- Reasoning should be 1-3 sentences, concrete: cite the weather, the rotation, the context
+== FOLLOW-UP QUESTIONS ==
+Before planning outfits for any trip or multi-context request, ask clarifying questions if you don't have:
+- Full breakdown of activities (work, casual, evening, rest, gym, sleep/lounge)
+- Duration and rough schedule for trips
+- Destination if different from Karachi (so you can check weather there)
+- Dress code constraints or cultural considerations
+Never assume and plan only for the headline event — always cover the full picture.
+Ask these as a short list, then wait for the answer before querying wardrobe or proposing outfits.
 
-Tone: direct, no fluff. Talal hates corporate politeness.
+== PLANNING COMPLETENESS ==
+For trips and multi-day plans, cover ALL scenarios — not just the main event:
+- Formal/business outfits for meetings
+- Smart casual for dinners and socialising
+- Casual for daily exploration and downtime
+- Lounge/rest wear for evenings in the hotel or home
+- Gym/active wear if relevant
+- Sleep considerations if packing is involved
+Be thorough. A 10-day trip needs outfits for 10 days, not just the one important meeting.
+For a simple daily question, 1-2 outfits is fine. Scale to context.
+
+== COLOR THEORY ==
+Safe pairings (always work):
+- Navy + white, navy + cream, navy + grey
+- Black + white, black + grey, black + camel
+- Olive + cream, olive + white, olive + navy
+- Charcoal + beige, charcoal + white
+- Camel/beige + white, camel + navy
+
+Avoid:
+- Black top + black bottom (flat, no contrast) unless intentionally monochromatic with texture
+- Navy + black together (too close, muddy)
+- Two bold/saturated colors unless you know they work (e.g. red + navy can work, red + green never)
+
+Contrast rules:
+- Light top + dark bottom OR dark top + light bottom = safe baseline
+- Tonal (same color family, different shades) works if there's texture or weight difference
+- Monochromatic only if there's clear texture variation
+
+Pattern rules:
+- One pattern per outfit max
+- Solid + graphic = fine
+- Graphic + graphic = avoid
+- Checked/striped pairs well with solid neutrals
+
+== CLIMATE & COMFORT ==
+Karachi heat (30-42°C most of year):
+- Light fabrics only at 30°C+ (cotton, linen, synthetic blends for sport)
+- Avoid heavy synthetics in heat — they trap sweat
+- Lighter colors absorb less heat — prefer white/cream/beige in peak summer
+- Avoid white/cream in monsoon (transparency risk)
+
+Weight matching:
+- 30°C+: Light only
+- 22-30°C: Light or Medium
+- Below 22°C: Medium or Heavy
+
+For trips to other cities: check their weather first, adjust accordingly. Islamabad winters are genuinely cold (5-15°C) vs Karachi's mild winters.
+
+== FORMALITY COHERENCE ==
+Never mix formality levels more than 2 apart.
+Scale: 1=gym/lounge, 2=casual, 3=smart casual, 4=business, 5=formal
+- Meeting with a minister = level 4-5
+- Office = level 3-4
+- Dinner out = level 3
+- Casual hangout = level 2
+- Hotel room/sleep = level 1
+
+== OUTFIT PROPOSALS ==
+Call propose_outfit as many times as needed to cover all activities — don't stop at 2-3 if the context demands more.
+Each proposal should have:
+- Concrete reasoning: cite the temperature, the occasion formality, the color logic, rotation status
+- A clear context_label (e.g. "Day 1 — Ministry meeting", "Evening hangout", "Hotel lounge")
+- Items that are actually Clean and available
+
 IMPORTANT: Respond in plain text only. No markdown, no asterisks, no bullet symbols.`;
 
 const TOOLS = [{
   functionDeclarations: [
     {
       name: 'get_weather',
-      description: "Get current weather and today's forecast for Karachi. Returns temperature, conditions, humidity, precipitation. Call this first when planning outfits.",
-      parameters: { type: 'OBJECT', properties: {} },
+      description: "Get current weather for any city. Always call this before planning outfits. Default is Karachi — pass a city name for trip planning (e.g. 'Islamabad', 'Dubai').",
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          city: { type: 'STRING', description: "City name. Omit for Karachi." },
+        },
+      },
     },
     {
       name: 'query_wardrobe',
-      description: 'Filter and retrieve wardrobe items. Use before proposing any outfit.',
+      description: 'Filter and retrieve wardrobe items. Call multiple times with different filters to cover different outfit types in one response.',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -44,14 +113,14 @@ const TOOLS = [{
     },
     {
       name: 'propose_outfit',
-      description: 'Submit a complete outfit recommendation. Call 1-3 times per request to offer options.',
+      description: 'Submit one complete outfit recommendation. Call once per outfit — call as many times as the context requires. For trips, call enough times to cover every activity type across all days.',
       parameters: {
         type: 'OBJECT',
         required: ['item_ids', 'reasoning'],
         properties: {
           item_ids: { type: 'ARRAY', items: { type: 'STRING' } },
-          reasoning: { type: 'STRING', description: 'Why these items: weather fit, formality, rotation, color match' },
-          context_label: { type: 'STRING' },
+          reasoning: { type: 'STRING', description: 'Concrete reasoning: cite the weather, occasion formality, color logic, and rotation. 2-4 sentences.' },
+          context_label: { type: 'STRING', description: 'Short label e.g. "Day 1 — Ministry meeting" or "Hotel lounge"' },
         },
       },
     },
@@ -62,7 +131,7 @@ async function executeTool(name: string, args: any): Promise<{ result: any; outf
   switch (name) {
     case 'get_weather': {
       try {
-        return { result: await getKarachiWeather() };
+        return { result: await getWeather(args.city) };
       } catch (e: any) {
         return { result: { error: e.message } };
       }
@@ -93,7 +162,6 @@ async function executeTool(name: string, args: any): Promise<{ result: any; outf
     case 'propose_outfit': {
       const { item_ids, reasoning, context_label } = args;
 
-      // Validate all item IDs exist
       const { data: valid } = await supabaseAdmin
         .from('items')
         .select('id')
@@ -137,7 +205,7 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
 
   const outfitIds: string[] = [];
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 16; i++) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -148,8 +216,8 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
         tool_config: { function_calling_config: { mode: 'AUTO' } },
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 4096,
-          thinkingConfig: { thinkingBudget: 8192 },
+          maxOutputTokens: 8192,
+          thinkingConfig: { thinkingBudget: 16384 },
         },
       }),
     });
@@ -161,7 +229,6 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
 
     const data = await res.json();
     const parts: any[] = data?.candidates?.[0]?.content?.parts || [];
-
     const functionCallParts = parts.filter((p: any) => p.functionCall);
 
     if (functionCallParts.length === 0) {
@@ -172,7 +239,6 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
     // Preserve full model content verbatim (including thoughtSignature)
     contents.push({ role: 'model', parts });
 
-    // Execute tools and collect responses
     const functionResponseParts: any[] = [];
     for (const part of functionCallParts) {
       const { name, args } = part.functionCall;
@@ -186,5 +252,5 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
     contents.push({ role: 'user', parts: functionResponseParts });
   }
 
-  return { answer: 'Could not complete after max iterations.', outfitIds };
+  return { answer: 'Could not complete — too many tool calls.', outfitIds };
 }

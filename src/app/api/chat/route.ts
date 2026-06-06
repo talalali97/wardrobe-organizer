@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { runAgent } from '@/lib/agent';
 
 export const runtime = 'nodejs';
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   try {

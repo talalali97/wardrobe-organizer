@@ -27,11 +27,38 @@ interface Message {
 
 const PLAN_TODAY_MSG = "Plan my outfit for today. Check the weather, look at what's clean, prefer items I haven't worn in 3+ days. Give me 2 options.";
 
+function Lightbox({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={name}
+        className="max-w-full max-h-full object-contain rounded-sm"
+        onClick={(e) => e.stopPropagation()}
+      />
+      <button onClick={onClose} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
+        <X size={22} />
+      </button>
+    </div>
+  );
+}
+
 function OutfitCardView({ outfit, onOutcome }: {
   outfit: OutfitCard;
   onOutcome: (id: string, outcome: 'worn' | 'skipped') => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [lightbox, setLightbox] = useState<{ src: string; name: string } | null>(null);
 
   const handleWore = async () => {
     setLoading(true);
@@ -65,55 +92,61 @@ function OutfitCardView({ outfit, onOutcome }: {
   };
 
   return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-sm p-2.5 mt-2">
-      {outfit.context_label && (
-        <div className="text-[10px] text-accent font-mono tracking-wider uppercase mb-2">
-          {outfit.context_label}
-        </div>
-      )}
-      <div className="flex gap-1.5 mb-2 flex-wrap">
-        {outfit.items.map((item) => (
-          <div key={item.id} className="flex flex-col items-center gap-1">
-            <div className="w-14 h-14 bg-zinc-900 rounded-sm overflow-hidden border border-zinc-800 shrink-0">
-              {item.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-zinc-700 text-[8px]">
-                  {item.category[0]}
-                </div>
-              )}
-            </div>
-            <div className="text-[9px] text-zinc-600 font-mono w-14 truncate text-center">{item.name}</div>
+    <>
+      {lightbox && <Lightbox src={lightbox.src} name={lightbox.name} onClose={() => setLightbox(null)} />}
+      <div className="bg-zinc-950 border border-zinc-800 rounded-sm p-2.5 mt-2">
+        {outfit.context_label && (
+          <div className="text-[10px] text-accent font-mono tracking-wider uppercase mb-2">
+            {outfit.context_label}
           </div>
-        ))}
+        )}
+        <div className="flex gap-1.5 mb-2 flex-wrap">
+          {outfit.items.map((item) => (
+            <div key={item.id} className="flex flex-col items-center gap-1">
+              <div
+                className="w-14 h-14 bg-zinc-900 rounded-sm overflow-hidden border border-zinc-800 shrink-0 cursor-pointer hover:border-accent transition-colors"
+                onClick={() => item.image_url && setLightbox({ src: item.image_url, name: item.name })}
+              >
+                {item.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700 text-[8px]">
+                    {item.category[0]}
+                  </div>
+                )}
+              </div>
+              <div className="text-[9px] text-zinc-600 font-mono w-14 truncate text-center">{item.name}</div>
+            </div>
+          ))}
       </div>
       <div className="text-[11px] text-zinc-400 font-mono mb-2.5 leading-relaxed">
         {outfit.reasoning}
       </div>
-      {outfit.outcome ? (
-        <div className={`text-[10px] font-mono tracking-wider ${outfit.outcome === 'worn' ? 'text-accent' : 'text-zinc-600'}`}>
-          {outfit.outcome === 'worn' ? '✓ worn' : '— skipped'}
-        </div>
-      ) : (
-        <div className="flex gap-1.5">
-          <button
-            onClick={handleWore}
-            disabled={loading}
-            className="flex-1 bg-accent text-zinc-950 text-[10px] font-mono font-bold tracking-wider uppercase py-1.5 rounded-sm disabled:opacity-50"
-          >
-            wore this
-          </button>
-          <button
-            onClick={handleSkip}
-            disabled={loading}
-            className="flex-1 bg-zinc-900 border border-zinc-700 text-zinc-400 text-[10px] font-mono tracking-wider uppercase py-1.5 rounded-sm disabled:opacity-50"
-          >
-            not today
-          </button>
-        </div>
-      )}
-    </div>
+        {outfit.outcome ? (
+          <div className={`text-[10px] font-mono tracking-wider ${outfit.outcome === 'worn' ? 'text-accent' : 'text-zinc-600'}`}>
+            {outfit.outcome === 'worn' ? '✓ worn' : '— skipped'}
+          </div>
+        ) : (
+          <div className="flex gap-1.5">
+            <button
+              onClick={handleWore}
+              disabled={loading}
+              className="flex-1 bg-accent text-zinc-950 text-[10px] font-mono font-bold tracking-wider uppercase py-1.5 rounded-sm disabled:opacity-50"
+            >
+              wore this
+            </button>
+            <button
+              onClick={handleSkip}
+              disabled={loading}
+              className="flex-1 bg-zinc-900 border border-zinc-700 text-zinc-400 text-[10px] font-mono tracking-wider uppercase py-1.5 rounded-sm disabled:opacity-50"
+            >
+              not today
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
