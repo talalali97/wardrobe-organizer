@@ -244,11 +244,22 @@ async function executeTool(name: string, args: any): Promise<{ result: any; outf
   }
 }
 
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
 function looksLikeOutfitSuggestion(text: string): boolean {
+  // UUID in text = model is referencing specific items without calling propose_outfit
+  if (UUID_RE.test(text)) return true;
   const lower = text.toLowerCase();
   return ['pair with', 'wear with', 'outfit', 'combine', 'go with', 'works with',
     'option 1', 'option 2', 'look 1', 'look 2', 'top:', 'bottom:', 'layer:',
     'wear this', 'here are'].some(k => lower.includes(k));
+}
+
+function stripUuids(text: string): string {
+  // Last-resort cleanup — remove any UUIDs that slipped through to the final response
+  return text.replace(/\s*\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)/gi, '')
+             .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '')
+             .replace(/\s{2,}/g, ' ').trim();
 }
 
 export interface AgentResult {
@@ -343,7 +354,7 @@ The tool works. Use it.`;
       }
 
       if (!text) console.error('Agent: no text in parts:', JSON.stringify(parts).slice(0, 300));
-      return { answer: text || 'Something went wrong — try again.', outfitIds };
+      return { answer: stripUuids(text || 'Something went wrong — try again.'), outfitIds };
     }
 
     // Preserve full model content verbatim (including thoughtSignature)
