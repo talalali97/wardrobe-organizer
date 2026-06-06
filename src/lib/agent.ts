@@ -273,21 +273,21 @@ export async function runAgent(history: any[], userMessage: string): Promise<Age
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
 
-  // Pre-fetch item count so the agent always knows inventory isn't empty
-  const { count: itemCount } = await supabaseAdmin
-    .from('items')
-    .select('*', { count: 'exact', head: true });
+  // Always fetch full inventory so the model ALWAYS has wardrobe access
+  // regardless of whether it decides to call query_wardrobe
+  const [{ data: allItems }, styleProfile] = await Promise.all([
+    supabaseAdmin
+      .from('items_with_wear')
+      .select('id, name, category, subcategory, color_primary, pattern, material_guess, weight, formality, sleeve_length, season_tags, context_tags, fit, status, days_since_worn, wear_count')
+      .order('category'),
+    getStyleProfile(),
+  ]);
 
-  const styleProfile = await getStyleProfile();
+  const inventoryBlock = allItems && allItems.length > 0
+    ? `== WARDROBE INVENTORY (${allItems.length} items — always available, no tool call needed) ==\n${JSON.stringify(allItems)}\n\nUse query_wardrobe for FILTERED queries (e.g. only Clean items, specific category). For general questions the data above is sufficient.`
+    : '';
 
-  const inventoryNote = `
-== INVENTORY ACCESS ==
-Talal's wardrobe has ${itemCount ?? 'many'} items in the database RIGHT NOW.
-NEVER tell him you can't see his wardrobe, that it's empty, or that you need him to list his items manually.
-Before answering ANY question about specific items, outfits, or what he owns — call query_wardrobe first.
-The tool works. Use it.`;
-
-  const systemPrompt = [SYSTEM_PROMPT, inventoryNote, styleProfile].filter(Boolean).join('\n\n');
+  const systemPrompt = [SYSTEM_PROMPT, inventoryBlock, styleProfile].filter(Boolean).join('\n\n');
 
   const contents: any[] = [
     ...history,
