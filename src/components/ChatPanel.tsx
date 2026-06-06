@@ -63,6 +63,28 @@ function OutfitCardView({ outfit, onOutcome }: {
 }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; name: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savePrompt, setSavePrompt] = useState(false);
+  const [saveName, setSaveName] = useState(outfit.context_label ?? '');
+
+  const handleSaveToLibrary = async () => {
+    if (!saveName.trim()) return;
+    setSaving(true);
+    await fetch('/api/outfits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: saveName.trim(),
+        item_ids: outfit.item_ids,
+        occasion: outfit.context_label,
+        notes: outfit.reasoning,
+      }),
+    });
+    setSaving(false);
+    setSaved(true);
+    setSavePrompt(false);
+  };
 
   const handleWore = async () => {
     setActionLoading(true);
@@ -142,19 +164,49 @@ function OutfitCardView({ outfit, onOutcome }: {
             <button
               onClick={handleWore}
               disabled={actionLoading}
-              className="flex-1 bg-accent text-zinc-950 text-[11px] font-mono font-bold tracking-wider py-2 rounded-sm disabled:opacity-50 transition-opacity"
+              className="flex-1 bg-accent text-zinc-950 text-[11px] font-display font-bold py-2 rounded-sm disabled:opacity-50 transition-opacity"
             >
               wore this
             </button>
             <button
               onClick={handleSkip}
               disabled={actionLoading}
-              className="px-5 border border-zinc-700 text-zinc-500 text-[11px] font-mono tracking-wider py-2 rounded-sm disabled:opacity-50 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
+              className="px-4 border border-zinc-700 text-zinc-500 text-[11px] font-mono py-2 rounded-sm disabled:opacity-50 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
             >
               skip
             </button>
           </div>
         )}
+
+        {/* Save to library */}
+        {!saved && !savePrompt && (
+          <button
+            onClick={() => setSavePrompt(true)}
+            className="text-[11px] font-mono text-zinc-600 hover:text-zinc-400 transition-colors text-left mt-1"
+          >
+            + save to library
+          </button>
+        )}
+        {savePrompt && (
+          <div className="flex gap-2 mt-1">
+            <input
+              autoFocus
+              value={saveName}
+              onChange={e => setSaveName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSaveToLibrary()}
+              placeholder="Outfit name..."
+              className="flex-1 bg-warm-950 border border-warm-700 text-zinc-50 px-2.5 py-1.5 text-[12px] rounded-sm font-display outline-none"
+            />
+            <button
+              onClick={handleSaveToLibrary}
+              disabled={!saveName.trim() || saving}
+              className="px-3 bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-mono rounded-sm disabled:opacity-40"
+            >
+              {saving ? '...' : 'save'}
+            </button>
+          </div>
+        )}
+        {saved && <div className="text-[11px] font-mono text-accent mt-1">✓ saved to library</div>}
       </div>
     </>
   );

@@ -105,6 +105,27 @@ const TOOLS = [{
       },
     },
     {
+      name: 'get_saved_outfits',
+      description: "Retrieve outfits the user has saved to their library. Use when they ask about past outfits, want to repeat something, or ask what combinations have worked before.",
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          occasion: { type: 'STRING', description: 'Filter by occasion (Casual, Office, Going-out, Formal, Gym, Travel, Street)' },
+        },
+      },
+    },
+    {
+      name: 'get_capsule',
+      description: "Retrieve items in a named capsule. Use when user asks about their travel capsule, office capsule, etc.",
+      parameters: {
+        type: 'OBJECT',
+        required: ['name'],
+        properties: {
+          name: { type: 'STRING', description: 'Capsule name or partial name' },
+        },
+      },
+    },
+    {
       name: 'search_web',
       description: "Search the web for current fashion trends, styling advice, or style inspiration. Use when the user asks about what's in style, how to style something, or needs fashion context beyond the wardrobe. Do NOT use for wardrobe inventory questions — use query_wardrobe for those.",
       parameters: {
@@ -139,6 +160,30 @@ async function executeTool(name: string, args: any): Promise<{ result: any; outf
       } catch (e: any) {
         return { result: { error: e.message } };
       }
+    }
+
+    case 'get_saved_outfits': {
+      let query = supabaseAdmin.from('outfits').select('id, name, item_ids, occasion, wear_count, last_worn').order('last_worn', { ascending: false, nullsFirst: false });
+      if (args.occasion) query = query.eq('occasion', args.occasion);
+      const { data, error } = await query;
+      if (error) return { result: { error: error.message } };
+      return { result: data ?? [] };
+    }
+
+    case 'get_capsule': {
+      const { data, error } = await supabaseAdmin
+        .from('capsules')
+        .select('id, name, item_ids, occasion, description')
+        .ilike('name', `%${args.name}%`)
+        .limit(1)
+        .single();
+      if (error) return { result: { error: `No capsule found matching "${args.name}"` } };
+      // Fetch item details for the capsule
+      const { data: items } = await supabaseAdmin
+        .from('items_with_wear')
+        .select('id, name, category, subcategory, color_primary, status, image_url')
+        .in('id', data.item_ids);
+      return { result: { ...data, items: items ?? [] } };
     }
 
     case 'search_web': {
@@ -199,6 +244,13 @@ async function executeTool(name: string, args: any): Promise<{ result: any; outf
   }
 }
 
+function looksLikeOutfitSuggestion(text: string): boolean {
+  const lower = text.toLowerCase();
+  return ['pair with', 'wear with', 'outfit', 'combine', 'go with', 'works with',
+    'option 1', 'option 2', 'look 1', 'look 2', 'top:', 'bottom:', 'layer:',
+    'wear this', 'here are'].some(k => lower.includes(k));
+}
+
 export interface AgentResult {
   answer: string;
   outfitIds: string[];
@@ -232,6 +284,8 @@ The tool works. Use it.`;
   ];
 
   const outfitIds: string[] = [];
+  let wardrobeQueried = false;
+  let proposeOutfitForced = false;
 
   for (let i = 0; i < 16; i++) {
     const res = await fetch(url, {
@@ -267,12 +321,28 @@ The tool works. Use it.`;
     const functionCallParts = parts.filter((p: any) => p.functionCall);
 
     if (functionCallParts.length === 0) {
-      // Skip thought parts (Gemini 3.x returns these alongside the real response)
       const textPart = parts.find((p: any) => p.text && !p.thought);
       const text = textPart?.text || parts.find((p: any) => typeof p.text === 'string')?.text;
-      if (!text) {
-        console.error('Agent: no text in parts:', JSON.stringify(parts).slice(0, 300));
+
+      // If wardrobe was queried, no outfits proposed, text looks like outfit advice
+      // — inject one forced retry before returning
+      if (
+        wardrobeQueried &&
+        outfitIds.length === 0 &&
+        !proposeOutfitForced &&
+        text &&
+        looksLikeOutfitSuggestion(text)
+      ) {
+        proposeOutfitForced = true;
+        contents.push({ role: 'model', parts });
+        contents.push({
+          role: 'user',
+          parts: [{ text: 'You recommended specific items but did not call propose_outfit. Call it now for each outfit combination, then give your final response.' }],
+        });
+        continue;
       }
+
+      if (!text) console.error('Agent: no text in parts:', JSON.stringify(parts).slice(0, 300));
       return { answer: text || 'Something went wrong — try again.', outfitIds };
     }
 
@@ -282,6 +352,7 @@ The tool works. Use it.`;
     const functionResponseParts: any[] = [];
     for (const part of functionCallParts) {
       const { name, args } = part.functionCall;
+      if (name === 'query_wardrobe') wardrobeQueried = true;
       const { result, outfitId } = await executeTool(name, args || {});
       if (outfitId) outfitIds.push(outfitId);
       functionResponseParts.push({

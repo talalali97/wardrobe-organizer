@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Download, RotateCcw, RotateCw, Search, Loader2 } from 'lucide-react';
+import { Download, RotateCcw, RotateCw, Search, Loader2, BookMarked } from 'lucide-react';
 import { CATEGORIES, SEASONS, CONTEXTS, type Item } from '@/lib/types';
 import { resizeToBase64, itemsToCsv } from '@/lib/image';
 import { colorToCss, getCurrentSeason, computeDupIds, formatValue } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { DropZone } from '@/components/DropZone';
 import { ItemCard } from '@/components/ItemCard';
 import { ItemEditor } from '@/components/ItemEditor';
 import { ChatPanel } from '@/components/ChatPanel';
+import { LibraryOverlay } from '@/components/LibraryOverlay';
 
 interface QueueItem {
   id: string;
@@ -34,6 +35,7 @@ export default function HomePage() {
   const [filterContexts, setFilterContexts] = useState<string[]>([]);
   const [filterSeasons, setFilterSeasons] = useState<string[]>([]);
   const [rotation, setRotation] = useState(0);
+  const [showLibrary, setShowLibrary] = useState(false);
   const [rotationDismissed, setRotationDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
     const key = `rotation_dismissed_${new Date().getFullYear()}-${new Date().getMonth()}`;
@@ -307,6 +309,12 @@ export default function HomePage() {
             </div>
           </div>
           <div className="flex gap-2 items-center flex-wrap">
+            <button
+              onClick={() => setShowLibrary(true)}
+              className="bg-warm-900 border border-warm-700 text-zinc-400 hover:text-zinc-50 px-3 py-2 text-[11px] tracking-wider uppercase rounded-sm flex items-center gap-1.5 transition-colors"
+            >
+              <BookMarked size={12} /> Library
+            </button>
             {dirtyCount > 0 && (
               <button
                 onClick={markAllClean}
@@ -628,6 +636,21 @@ export default function HomePage() {
           item={editing}
           onClose={() => setEditing(null)}
           onSave={updateItem}
+        />
+      )}
+
+      {showLibrary && (
+        <LibraryOverlay
+          items={items}
+          onClose={() => setShowLibrary(false)}
+          onWoreOutfit={(itemIds) => {
+            // Optimistically mark all outfit items as dirty in local state
+            setItems(prev => prev.map(i =>
+              itemIds.includes(i.id)
+                ? { ...i, status: 'Dirty' as const, wear_count: (i.wear_count || 0) + 1, last_worn: new Date().toISOString(), days_since_worn: 0 }
+                : i
+            ));
+          }}
         />
       )}
 
