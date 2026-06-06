@@ -67,18 +67,18 @@ export function ItemEditor({ item, onClose, onSave }: ItemEditorProps) {
   };
 
   const inputClass =
-    'w-full bg-zinc-950 border border-zinc-800 text-zinc-50 px-2.5 py-1.5 text-[13px] rounded-sm font-mono';
+    'w-full bg-warm-950 border border-warm-700 text-zinc-50 px-2.5 py-1.5 text-[13px] rounded-sm font-mono';
 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-zinc-900 border border-zinc-800 rounded-sm w-full max-w-2xl max-h-[92svh] overflow-auto overscroll-contain"
+        className="bg-warm-900 border border-warm-700 rounded-sm w-full max-w-2xl max-h-[92svh] overflow-auto overscroll-contain"
       >
-        <div className="px-4 py-3.5 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
+        <div className="px-4 py-3.5 border-b border-warm-700 flex justify-between items-center sticky top-0 bg-warm-900 z-10">
           <div className="text-[11px] tracking-[1.2px] uppercase text-accent">
             EDIT ITEM // {draft.id.slice(-6)}
           </div>

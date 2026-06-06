@@ -2,6 +2,7 @@
 
 import { AlertCircle, Trash2 } from 'lucide-react';
 import type { Item } from '@/lib/types';
+import { isNeedsReview } from '@/lib/utils';
 
 interface ItemCardProps {
   item: Item;
@@ -12,9 +13,7 @@ interface ItemCardProps {
 }
 
 export function ItemCard({ item, onEdit, onDelete, onStatusToggle, isDuplicate }: ItemCardProps) {
-  const keyFields = [item.subcategory, item.color_primary, item.pattern, item.material_guess];
-  const missingCount = keyFields.filter((f) => !f || f === 'Unknown').length;
-  const lowConf = missingCount >= 2;
+  const lowConf = isNeedsReview(item);
   const canToggle = item.status === 'Clean' || item.status === 'Dirty';
 
   const sublabel = [item.subcategory, item.color_primary].filter(Boolean).join(' · ');

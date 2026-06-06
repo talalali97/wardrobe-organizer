@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Download, RotateCcw, RotateCw, Search, Loader2 } from 'lucide-react';
 import { CATEGORIES, SEASONS, CONTEXTS, type Item } from '@/lib/types';
 import { resizeToBase64, itemsToCsv } from '@/lib/image';
+import { colorToCss, getCurrentSeason, computeDupIds, formatValue } from '@/lib/utils';
 import { DropZone } from '@/components/DropZone';
 import { ItemCard } from '@/components/ItemCard';
 import { ItemEditor } from '@/components/ItemEditor';
@@ -18,17 +19,6 @@ interface QueueItem {
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-const COLOR_CSS: Record<string, string> = {
-  'Black': '#09090b', 'White': '#fafafa', 'Off-white': '#f5f0e8', 'Cream': '#fffbeb',
-  'Grey': '#71717a', 'Light Grey': '#a1a1aa', 'Dark Grey': '#3f3f46', 'Charcoal': '#27272a',
-  'Beige': '#d4b896', 'Camel': '#c19a6b', 'Brown': '#92400e', 'Dark Brown': '#431407',
-  'Navy': '#1e3a5f', 'Navy Blue': '#1e3a5f', 'Dark Blue': '#1e3a8a', 'Blue': '#3b82f6',
-  'Light Blue': '#93c5fd', 'Sky Blue': '#7dd3fc',
-  'Olive': '#6b7c3a', 'Olive Green': '#6b7c3a', 'Green': '#22c55e', 'Dark Green': '#15803d', 'Khaki': '#c3b091',
-  'Maroon': '#7f1d1d', 'Burgundy': '#9f1239', 'Red': '#ef4444',
-  'Orange': '#f97316', 'Yellow': '#eab308', 'Pink': '#ec4899', 'Purple': '#a855f7', 'Teal': '#0d9488',
-};
-const colorToCss = (name: string) => COLOR_CSS[name] ?? '#52525b';
 
 export default function HomePage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -254,12 +244,7 @@ export default function HomePage() {
   const formalityCounts = [1, 2, 3, 4, 5].map(f => items.filter(i => (i.formality || 3) === f).length);
   const maxFormality = Math.max(...formalityCounts, 1);
 
-  const currentSeason = (() => {
-    const m = new Date().getMonth() + 1;
-    if (m >= 7 && m <= 9) return 'Monsoon';
-    if (m >= 11 || m <= 2) return 'Winter';
-    return 'Summer';
-  })();
+  const currentSeason = getCurrentSeason();
 
   const readyToUnpack = items.filter(i =>
     i.status === 'Storage' && i.season_tags.includes(currentSeason as any)
@@ -278,26 +263,13 @@ export default function HomePage() {
     setRotationDismissed(true);
   };
 
-  const dupIds = (() => {
-    const groups: Record<string, string[]> = {};
-    for (const item of items) {
-      if (!item.subcategory || !item.color_primary) continue;
-      const key = `${item.category}|${item.subcategory}|${item.color_primary}`;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(item.id);
-    }
-    const ids = new Set<string>();
-    for (const g of Object.values(groups)) if (g.length >= 2) g.forEach(id => ids.add(id));
-    return ids;
-  })();
+  const dupIds = computeDupIds(items);
 
   const wornThisWeek = items.filter(i => i.days_since_worn != null && i.days_since_worn <= 7).length;
   const stale30 = items.filter(i => i.last_worn === null || (i.days_since_worn != null && i.days_since_worn > 30)).length;
 
   const wardrobeValue = items.reduce((sum, i) => sum + (i.price ?? 0), 0);
-  const valueFmt = wardrobeValue >= 1000
-    ? `₨${(wardrobeValue / 1000).toFixed(wardrobeValue >= 10000 ? 0 : 1)}k`
-    : wardrobeValue > 0 ? `₨${wardrobeValue}` : null;
+  const valueFmt = formatValue(wardrobeValue);
 
   const cpwItems = items.filter(i => i.price != null && i.wear_count > 0);
   const avgCpw = cpwItems.length > 0
