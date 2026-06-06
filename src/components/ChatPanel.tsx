@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2, CalendarCheck } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, CalendarCheck, BarChart2, Plane } from 'lucide-react';
 
 interface OutfitItem {
   id: string;
@@ -27,6 +27,18 @@ interface Message {
 
 const PLAN_TODAY_MSG = "Plan my outfit for today. Check the weather, look at what's clean, prefer items I haven't worn in 3+ days. Give me 2 options.";
 
+const QUICK_ACTIONS = [
+  { icon: CalendarCheck, label: "Plan today's outfit", msg: PLAN_TODAY_MSG },
+  { icon: BarChart2,    label: 'Analyse my wardrobe', msg: "Give me an honest analysis of my wardrobe — gaps, duplicates, what's working and what's not." },
+  { icon: Plane,        label: 'Help me pack for a trip', msg: "I need help packing for a trip. Ask me where I'm going and what I have planned." },
+];
+
+const QUICK_ASKS = [
+  "What's my most worn item?",
+  "What am I missing for office wear?",
+  "Show me outfit ideas for going out",
+];
+
 function Lightbox({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -35,19 +47,11 @@ function Lightbox({ src, name, onClose }: { src: string; name: string; onClose: 
   }, [onClose]);
 
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4"
-    >
+    <div onClick={onClose} className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={name}
-        className="max-w-full max-h-full object-contain rounded-sm"
-        onClick={(e) => e.stopPropagation()}
-      />
-      <button onClick={onClose} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
-        <X size={22} />
+      <img src={src} alt={name} className="max-w-full max-h-full object-contain rounded-sm" onClick={(e) => e.stopPropagation()} />
+      <button onClick={onClose} className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors">
+        <X size={20} />
       </button>
     </div>
   );
@@ -57,101 +61,97 @@ function OutfitCardView({ outfit, onOutcome }: {
   outfit: OutfitCard;
   onOutcome: (id: string, outcome: 'worn' | 'skipped') => void;
 }) {
-  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [lightbox, setLightbox] = useState<{ src: string; name: string } | null>(null);
 
   const handleWore = async () => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await Promise.all(
         outfit.item_ids.map((item_id) =>
-          fetch('/api/wear', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ item_id }),
-          })
+          fetch('/api/wear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item_id }) })
         )
       );
-      await fetch(`/api/outfits/${outfit.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ outcome: 'worn' }),
-      });
+      await fetch(`/api/outfits/${outfit.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome: 'worn' }) });
       onOutcome(outfit.id, 'worn');
     } catch (e) {
       console.error('Failed to log wear:', e);
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   const handleSkip = async () => {
-    setLoading(true);
+    setActionLoading(true);
     try {
-      await fetch(`/api/outfits/${outfit.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ outcome: 'skipped' }),
-      });
+      await fetch(`/api/outfits/${outfit.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome: 'skipped' }) });
       onOutcome(outfit.id, 'skipped');
     } catch (e) {
       console.error('Failed to skip outfit:', e);
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   return (
     <>
       {lightbox && <Lightbox src={lightbox.src} name={lightbox.name} onClose={() => setLightbox(null)} />}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-sm p-2.5 mt-2">
+      <div className="mt-3 border-l-2 border-accent/30 pl-3 flex flex-col gap-3">
         {outfit.context_label && (
-          <div className="text-[10px] text-accent font-mono tracking-wider uppercase mb-2">
+          <div className="text-[10px] text-accent font-mono tracking-widest uppercase">
             {outfit.context_label}
           </div>
         )}
-        <div className="flex gap-1.5 mb-2 flex-wrap">
+
+        {/* Thumbnails — larger, horizontal scroll */}
+        <div className="flex gap-2 overflow-x-auto pb-0.5 -mr-1 pr-1" style={{ scrollbarWidth: 'none' }}>
           {outfit.items.map((item) => (
-            <div key={item.id} className="flex flex-col items-center gap-1">
+            <div key={item.id} className="shrink-0 flex flex-col gap-1.5 items-center">
               <div
-                className="w-14 h-14 bg-zinc-900 rounded-sm overflow-hidden border border-zinc-800 shrink-0 cursor-pointer hover:border-accent transition-colors"
+                className="w-[82px] h-[82px] bg-zinc-900 rounded-sm overflow-hidden border border-zinc-800 cursor-pointer hover:border-accent/50 transition-colors"
                 onClick={() => item.image_url && setLightbox({ src: item.image_url, name: item.name })}
               >
                 {item.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-700 text-[8px]">
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700 text-[10px] font-mono uppercase">
                     {item.category[0]}
                   </div>
                 )}
               </div>
-              <div className="text-[9px] text-zinc-600 font-mono w-14 truncate text-center">{item.name}</div>
+              <div className="text-[9px] text-zinc-600 font-mono w-[82px] truncate text-center leading-tight">
+                {item.name}
+              </div>
             </div>
           ))}
-      </div>
-      <div className="text-[11px] text-zinc-400 font-mono mb-2.5 leading-relaxed">
-        {outfit.reasoning}
-      </div>
+        </div>
+
+        {/* Reasoning */}
+        <p className="text-[11px] text-zinc-500 font-mono leading-relaxed">
+          {outfit.reasoning}
+        </p>
+
+        {/* Actions */}
         {outfit.outcome ? (
           <div className={`text-[10px] font-mono tracking-wider ${outfit.outcome === 'worn' ? 'text-accent' : 'text-zinc-600'}`}>
-            {outfit.outcome === 'worn' ? '✓ worn' : '— skipped'}
+            {outfit.outcome === 'worn' ? '✓ logged as worn' : '— skipped'}
           </div>
         ) : (
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <button
               onClick={handleWore}
-              disabled={loading}
-              className="flex-1 bg-accent text-zinc-950 text-[10px] font-mono font-bold tracking-wider uppercase py-1.5 rounded-sm disabled:opacity-50"
+              disabled={actionLoading}
+              className="flex-1 bg-accent text-zinc-950 text-[11px] font-mono font-bold tracking-wider py-2 rounded-sm disabled:opacity-50 transition-opacity"
             >
               wore this
             </button>
             <button
               onClick={handleSkip}
-              disabled={loading}
-              className="flex-1 bg-zinc-900 border border-zinc-700 text-zinc-400 text-[10px] font-mono tracking-wider uppercase py-1.5 rounded-sm disabled:opacity-50"
+              disabled={actionLoading}
+              className="px-5 border border-zinc-700 text-zinc-500 text-[11px] font-mono tracking-wider py-2 rounded-sm disabled:opacity-50 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
             >
-              not today
+              skip
             </button>
           </div>
         )}
@@ -164,7 +164,6 @@ export function ChatPanel() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [planContext, setPlanContext] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -209,10 +208,10 @@ export function ChatPanel() {
   };
 
   const planToday = () => {
-    const msg = planContext.trim()
-      ? `${PLAN_TODAY_MSG} Context: ${planContext.trim()}`
+    const msg = input.trim()
+      ? `${PLAN_TODAY_MSG} Context: ${input.trim()}`
       : PLAN_TODAY_MSG;
-    setPlanContext('');
+    setInput('');
     send(msg);
   };
 
@@ -227,113 +226,122 @@ export function ChatPanel() {
 
   return (
     <>
+      {/* FAB */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 w-12 h-12 bg-accent text-zinc-950 rounded-full flex items-center justify-center shadow-lg z-40"
+        className="fixed bottom-5 right-5 w-12 h-12 bg-accent text-zinc-950 rounded-full flex items-center justify-center shadow-lg z-40 transition-transform active:scale-95"
       >
         {open ? <X size={18} /> : <MessageCircle size={18} />}
       </button>
 
       {open && (
-        <div className="fixed bottom-20 right-5 w-[min(380px,calc(100vw-2.5rem))] bg-zinc-900 border border-zinc-800 rounded-sm shadow-xl z-40 flex flex-col max-h-[70svh]">
-          <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] tracking-[1.2px] uppercase text-accent">// wardrobe.ai</div>
-              <div className="text-[12px] text-zinc-400 font-mono">Ask anything about your wardrobe</div>
+        <div className="fixed bottom-20 right-5 w-[min(400px,calc(100vw-2.5rem))] bg-zinc-900 border border-zinc-800 rounded-sm shadow-2xl z-40 flex flex-col max-h-[75svh]">
+
+          {/* Header */}
+          <div className="px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <span className="text-[11px] font-mono text-zinc-400 tracking-wider">wardrobe.ai</span>
             </div>
             {messages.length > 0 && (
               <button
                 onClick={() => setMessages([])}
-                className="text-[10px] text-zinc-600 hover:text-zinc-400 font-mono uppercase tracking-wider"
+                className="text-[10px] text-zinc-700 hover:text-zinc-400 font-mono uppercase tracking-wider transition-colors"
               >
                 clear
               </button>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 overscroll-contain">
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 overscroll-contain">
             {messages.length === 0 && (
-              <div className="text-zinc-600 text-[12px] font-mono text-center mt-4 flex flex-col gap-2">
-                <div>Try asking:</div>
-                {[
-                  'How many t-shirts do I have?',
-                  "What's missing from my wardrobe?",
-                  'What can I wear to a wedding?',
-                  'Show me casual summer outfits',
-                ].map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setInput(s); inputRef.current?.focus(); }}
-                    className="text-zinc-500 hover:text-accent text-[11px] font-mono transition-colors"
-                  >
-                    "{s}"
-                  </button>
-                ))}
+              <div className="flex flex-col gap-5 mt-2">
+                {/* Action chips */}
+                <div className="flex flex-col gap-2">
+                  {QUICK_ACTIONS.map(({ icon: Icon, label, msg }) => (
+                    <button
+                      key={label}
+                      onClick={() => send(msg)}
+                      disabled={loading}
+                      className="flex items-center gap-3 px-3 py-2.5 bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 hover:border-zinc-600 rounded-sm text-left transition-colors disabled:opacity-40 group"
+                    >
+                      <Icon size={13} className="text-accent shrink-0" />
+                      <span className="text-[12px] font-mono text-zinc-300 group-hover:text-zinc-200 transition-colors">{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Quick questions */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="text-[10px] text-zinc-700 font-mono uppercase tracking-wider mb-0.5">or ask anything</div>
+                  {QUICK_ASKS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => { setInput(s); inputRef.current?.focus(); }}
+                      className="text-[11px] text-zinc-600 hover:text-zinc-400 font-mono text-left transition-colors"
+                    >
+                      "{s}"
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
+
             {messages.map((m, i) => (
               <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                <div
-                  className={`max-w-[85%] px-3 py-2 rounded-sm text-[12px] font-mono whitespace-pre-wrap ${
-                    m.role === 'user' ? 'bg-accent text-zinc-950' : 'bg-zinc-800 text-zinc-200'
-                  }`}
-                >
-                  {m.content}
-                </div>
-                {m.outfits?.map((outfit) => (
-                  <div key={outfit.id} className="w-full max-w-[92%]">
-                    <OutfitCardView outfit={outfit} onOutcome={updateOutfitOutcome} />
+                {m.role === 'user' ? (
+                  <div className="max-w-[80%] bg-accent text-zinc-950 px-3 py-2 rounded-sm text-[12px] font-mono whitespace-pre-wrap leading-relaxed">
+                    {m.content}
                   </div>
-                ))}
+                ) : (
+                  <div className="w-full flex flex-col gap-0.5">
+                    <div className="text-[12px] font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                      {m.content}
+                    </div>
+                    {m.outfits?.map((outfit) => (
+                      <OutfitCardView key={outfit.id} outfit={outfit} onOutcome={updateOutfitOutcome} />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
+
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-zinc-800 px-3 py-2 rounded-sm flex items-center gap-2">
-                  <Loader2 size={13} className="text-accent animate-spin" />
-                  <span className="text-[11px] text-zinc-500 font-mono">thinking...</span>
-                </div>
+              <div className="flex items-center gap-2 text-zinc-600">
+                <Loader2 size={12} className="text-accent animate-spin shrink-0" />
+                <span className="text-[11px] font-mono">thinking...</span>
               </div>
             )}
+
             <div ref={bottomRef} />
           </div>
 
-          {/* Plan Today + input */}
-          <div className="p-3 border-t border-zinc-800 flex flex-col gap-2">
-            <div className="flex gap-2">
-              <input
-                value={planContext}
-                onChange={(e) => setPlanContext(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && planToday()}
-                placeholder="Today's context (optional)..."
-                className="flex-1 bg-zinc-950 border border-zinc-800 text-zinc-50 px-2.5 py-1.5 text-[11px] rounded-sm font-mono placeholder:text-zinc-700"
-              />
-              <button
-                onClick={planToday}
-                disabled={loading}
-                title="Plan today's outfit"
-                className="bg-zinc-800 border border-zinc-700 text-accent px-2.5 py-1.5 rounded-sm disabled:opacity-40 flex items-center gap-1.5 text-[11px] font-mono shrink-0"
-              >
-                <CalendarCheck size={12} /> Plan today
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && send()}
-                placeholder="Ask about your wardrobe..."
-                className="flex-1 bg-zinc-950 border border-zinc-800 text-zinc-50 px-3 py-2 text-[12px] rounded-sm font-mono placeholder:text-zinc-600"
-              />
-              <button
-                onClick={() => send()}
-                disabled={!input.trim() || loading}
-                className="bg-accent text-zinc-950 px-3 py-2 rounded-sm disabled:opacity-40"
-              >
-                <Send size={13} />
-              </button>
-            </div>
+          {/* Input */}
+          <div className="p-3 border-t border-zinc-800 flex items-center gap-2">
+            <button
+              onClick={planToday}
+              disabled={loading}
+              title={input.trim() ? `Plan today — with context: "${input}"` : "Plan today's outfit"}
+              className="w-8 h-8 flex items-center justify-center bg-zinc-800 border border-zinc-700 text-accent rounded-sm disabled:opacity-40 hover:border-accent/50 transition-colors shrink-0"
+            >
+              <CalendarCheck size={13} />
+            </button>
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && send()}
+              placeholder="Ask about your wardrobe..."
+              className="flex-1 bg-zinc-950 border border-zinc-800 focus:border-zinc-600 text-zinc-50 px-3 py-2 text-[12px] rounded-sm font-mono placeholder:text-zinc-600 outline-none transition-colors"
+            />
+            <button
+              onClick={() => send()}
+              disabled={!input.trim() || loading}
+              className="w-8 h-8 flex items-center justify-center bg-accent text-zinc-950 rounded-sm disabled:opacity-40 transition-opacity shrink-0"
+            >
+              <Send size={13} />
+            </button>
           </div>
         </div>
       )}
