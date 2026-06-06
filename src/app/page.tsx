@@ -44,6 +44,11 @@ export default function HomePage() {
   const [filterContexts, setFilterContexts] = useState<string[]>([]);
   const [filterSeasons, setFilterSeasons] = useState<string[]>([]);
   const [rotation, setRotation] = useState(0);
+  const [rotationDismissed, setRotationDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const key = `rotation_dismissed_${new Date().getFullYear()}-${new Date().getMonth()}`;
+    return localStorage.getItem(key) === '1';
+  });
 
 
   // Load items
@@ -245,6 +250,30 @@ export default function HomePage() {
   const formalityCounts = [1, 2, 3, 4, 5].map(f => items.filter(i => (i.formality || 3) === f).length);
   const maxFormality = Math.max(...formalityCounts, 1);
 
+  const currentSeason = (() => {
+    const m = new Date().getMonth() + 1;
+    if (m >= 7 && m <= 9) return 'Monsoon';
+    if (m >= 11 || m <= 2) return 'Winter';
+    return 'Summer';
+  })();
+
+  const readyToUnpack = items.filter(i =>
+    i.status === 'Storage' && i.season_tags.includes(currentSeason as any)
+  );
+  const shouldPack = items.filter(i =>
+    ['Clean', 'Dirty'].includes(i.status) &&
+    i.season_tags.length > 0 &&
+    !i.season_tags.includes(currentSeason as any) &&
+    !i.season_tags.includes('All-year' as any)
+  );
+  const showRotationBanner = !rotationDismissed && (readyToUnpack.length > 0 || shouldPack.length > 0);
+
+  const dismissRotation = () => {
+    const key = `rotation_dismissed_${new Date().getFullYear()}-${new Date().getMonth()}`;
+    localStorage.setItem(key, '1');
+    setRotationDismissed(true);
+  };
+
   const dupIds = (() => {
     const groups: Record<string, string[]> = {};
     for (const item of items) {
@@ -329,6 +358,20 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
+        {/* Seasonal rotation banner */}
+        {showRotationBanner && (
+          <div className="flex items-center justify-between gap-3 border border-zinc-800 rounded-sm px-3 py-2 mb-3 text-[11px] font-mono text-zinc-500">
+            <span>
+              ↕ {currentSeason} rotation
+              {readyToUnpack.length > 0 && ` · ${readyToUnpack.length} item${readyToUnpack.length > 1 ? 's' : ''} in storage ready to unpack`}
+              {shouldPack.length > 0 && ` · ${shouldPack.length} out-of-season item${shouldPack.length > 1 ? 's' : ''} still active`}
+            </span>
+            <button onClick={dismissRotation} className="shrink-0 text-zinc-700 hover:text-zinc-400 transition-colors">
+              dismiss
+            </button>
+          </div>
+        )}
 
         {/* Analytics */}
         {items.length >= 5 && (
